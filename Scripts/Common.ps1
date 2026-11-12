@@ -44,6 +44,8 @@ function Get-EngineRoot {
 $EngineRoot = Get-EngineRoot
 $BuildBat   = Join-Path $EngineRoot 'Engine\Build\BatchFiles\Build.bat'
 $EditorCmd  = Join-Path $EngineRoot 'Engine\Binaries\Win64\UnrealEditor-Cmd.exe'
+# Stock Python shipped with the engine; runs the data tools without a separate Python install.
+$EnginePython = Join-Path $EngineRoot 'Engine\Binaries\ThirdParty\Python3\Win64\python.exe'
 
 function Write-Step([string]$Message) {
     Write-Host ''

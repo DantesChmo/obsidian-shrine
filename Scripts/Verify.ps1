@@ -1,10 +1,11 @@
-# Full check: build -> content -> tests. Stops at the first failing stage.
+# Full check: data -> build -> content -> tests. Stops at the first failing stage.
 # Writes Saved\Reports\summary.md - the single file to read after a run.
 
 . "$PSScriptRoot\Common.ps1"
 
 $summary = Join-Path $ReportDir 'summary.md'
 $stages = @(
+    @{ Name = 'Data';    Script = 'BuildData.ps1';    Report = 'data.log' },
     @{ Name = 'Build';   Script = 'Build.ps1';        Report = 'build_errors.txt' },
     @{ Name = 'Content'; Script = 'BuildContent.ps1'; Report = 'content_status.json' },
     @{ Name = 'Tests';   Script = 'RunTests.ps1';     Report = 'tests_summary.txt' }
