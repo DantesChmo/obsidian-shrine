@@ -1,0 +1,71 @@
+{
+	"Characters": [
+		{
+			"Id": "husk",
+			"DisplayName": "Hollow Husk",
+			"MaxHealth": 70,
+			"MaxPoise": 30,
+			"PoiseResetDelay": 4,
+			"WalkSpeed": 260,
+			"Weapon": "husk_claws",
+			"AIProfile": "husk_ai",
+			"CurrencyReward": 40,
+			"PlaceholderColor": "#B0503A",
+			"Actions": {
+				"Stagger": "react_stagger",
+				"Parried": "react_parried",
+				"Death": "react_death"
+			}
+		}
+	],
+	"Weapons": [
+		{
+			"Id": "husk_claws",
+			"Damage": 18,
+			"PoiseDamage": 15,
+			"Reach": 160,
+			"Radius": 55
+		}
+	],
+	"AIProfiles": [
+		{
+			"Id": "husk_ai",
+			"AggroRadius": 1200,
+			"LeashRadius": 2500,
+			"AttackDelayMin": 0.6,
+			"AttackDelayMax": 1.5,
+			"TurnRate": 360,
+			"Moves": [
+				{ "Action": "husk_slash", "MinRange": 0, "MaxRange": 220, "Weight": 3 },
+				{ "Action": "husk_lunge", "MinRange": 350, "MaxRange": 700, "Weight": 1, "Cooldown": 4 }
+			]
+		}
+	],
+	"Actions": [
+		{
+			"Id": "husk_slash",
+			"Duration": 1.4,
+			"bSnapFacing": true,
+			"TrackingEnd": 0.45,
+			"MoveDistance": 100,
+			"MoveStart": 0.45,
+			"MoveEnd": 0.7,
+			"Windows": [
+				{ "Type": "Hit", "Start": 0.6, "End": 0.8 }
+			]
+		},
+		{
+			"Id": "husk_lunge",
+			"Duration": 1.8,
+			"bSnapFacing": true,
+			"TrackingEnd": 0.6,
+			"DamageScale": 1.3,
+			"MoveDistance": 450,
+			"MoveStart": 0.6,
+			"MoveEnd": 0.95,
+			"Windows": [
+				{ "Type": "Hit", "Start": 0.8, "End": 1.0 }
+			]
+		}
+	]
+}

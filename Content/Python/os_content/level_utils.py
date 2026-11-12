@@ -59,6 +59,36 @@ def spawn_static_mesh(mesh_path, label, location, scale=(1.0, 1.0, 1.0), rotatio
     return actor
 
 
+def spawn_game_actor(class_name, label, location, rotation=(0.0, 0.0, 0.0), properties=None):
+    """Spawns a C++ gameplay actor (class name without the A prefix, e.g. "OSEnemySpawner").
+
+    properties: {python_property_name: value}; strings are converted to unreal.Name.
+    """
+    actor_class = unreal.load_class(None, "/Script/ObsidianShrine.{}".format(class_name))
+    if actor_class is None:
+        raise RuntimeError("Gameplay class not found: {} (is the C++ module built?)".format(class_name))
+
+    actor = spawn(actor_class, label, location, rotation)
+    for name, value in (properties or {}).items():
+        if isinstance(value, str):
+            value = unreal.Name(value)
+        actor.set_editor_property(name, value)
+    return actor
+
+
+def spawn_enemy(character_id, label, location, rotation=(0.0, 0.0, 0.0), persistent_id=None):
+    """Places an enemy defined in Content/Data. persistent_id makes it stay dead once killed (bosses)."""
+    properties = {"character_id": character_id}
+    if persistent_id:
+        properties["persistent_id"] = persistent_id
+    return spawn_game_actor("OSEnemySpawner", label, location, rotation, properties)
+
+
+def spawn_checkpoint(checkpoint_id, label, location, rotation=(0.0, 0.0, 0.0)):
+    """Places a shrine. The player respawns 180 uu in front of it (its +X after rotation)."""
+    return spawn_game_actor("OSCheckpoint", label, location, rotation, {"checkpoint_id": checkpoint_id})
+
+
 def save_current_level():
     if not _level_subsystem().save_current_level():
         raise RuntimeError("Failed to save current level")

@@ -15,13 +15,28 @@ Souls-like action RPG tech demo. Unreal Engine 5 (C++), target platform Win64 on
 - No Blueprints and no hand-edited binary assets. Gameplay is C++; every asset and level is produced by Python scripts in
   `Content/Python` (entry: `build_content.py`), so `Content/` can be rebuilt from text. The only accepted exception is
   Animation Blueprints if a C++/script-only route proves impossible — decide explicitly, do not drift into it.
-- Data (weapons, stats, enemy movesets) lives in data tables/JSON, not hard-coded.
+- Data (weapons, stats, enemy movesets) lives in `Content/Data/*.json`, not hard-coded. New enemies, weapons and
+  attacks are added there without touching C++; `ObsidianShrine.Data.ShippedDataIsValid` checks references.
 - Every gameplay change ships with an automation test under `Source/ObsidianShrine/Private/Tests`, test names
   `ObsidianShrine.<Area>.<Name>`.
 - Assets from Fab/Marketplace are imported on the Windows machine into `Content/ThirdParty/` and are not committed.
 - Free assets only, unless the user explicitly approves a paid one.
 - C++ naming: `OS` prefix for project types (`AOSGameMode`), `LogObsidian` log category, Public/Private layout by area.
 - Scripts must run on Windows PowerShell 5.1.
+
+## Architecture
+
+- No GAS. `UOSDataSubsystem` (engine subsystem) loads definitions from JSON; structs are in `Public/Data/OSDataTypes.h`.
+- An action is a timeline of windows (Hit, Invulnerable, Guard, PerfectGuard, HyperArmor, Cancel) run by
+  `UOSActionComponent`; gameplay timing comes from data, never from animation notifies. Animations are optional
+  and are stretched to the action's duration.
+- `UOSStatsComponent`, `UOSActionComponent`, `UOSCombatComponent` expose `Advance()`/pure functions and work without
+  an actor or world; test them that way (`Private/Tests/OSTestHelpers.h`). Use a real world only for scene queries.
+- `AOSCharacterBase` is fully defined by `CharacterId`; `AOSEnemyCharacter` + `UOSAIBrainComponent` cover regular
+  enemies and bosses alike. Without meshes characters render as placeholders.
+- Input actions are built in code in `AOSPlayerController`; the HUD is canvas-drawn (`AOSHUD`). No input or UI assets.
+- Death loop and save: `AOSGameMode` + `UOSProgressSubsystem` (`FOSProgressState`).
+- Levels place `AOSEnemySpawner` / `AOSCheckpoint` via `level_utils.spawn_enemy` / `spawn_checkpoint`.
 
 ## Git
 

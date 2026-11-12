@@ -1,4 +1,4 @@
-"""L_Sandbox: greybox test arena used by M1-M3 for movement and combat."""
+"""L_Sandbox: greybox test arena with one of everything: shrine, regular enemies, boss."""
 
 import unreal
 
@@ -36,6 +36,19 @@ def _build_geometry():
     level_utils.spawn_static_mesh(CUBE, "Ledge", location=(0, 2800, 250), scale=(6, 4, 5))
 
 
+def _build_gameplay():
+    # Shrine right behind the player start, facing the arena (+Y).
+    level_utils.spawn_checkpoint("sandbox_start", "Shrine_Start", location=(0, -1900, 80), rotation=(0, 90, 0))
+
+    level_utils.spawn_enemy("husk", "Enemy_Husk_0", location=(-500, 300, 100), rotation=(0, -90, 0))
+    level_utils.spawn_enemy("husk", "Enemy_Husk_1", location=(600, 900, 100), rotation=(0, -90, 0))
+
+    # Boss in the far corner, well outside the husks' fight.
+    level_utils.spawn_enemy(
+        "shrine_warden", "Boss_ShrineWarden", location=(-2600, -2600, 200), rotation=(0, 45, 0),
+        persistent_id="sandbox_shrine_warden")
+
+
 def build():
     if not level_utils.open_or_create_level(LEVEL_PATH):
         raise RuntimeError("Could not open or create {}".format(LEVEL_PATH))
@@ -44,6 +57,7 @@ def build():
     _build_lighting()
     _build_geometry()
     level_utils.spawn(unreal.PlayerStart, "PlayerStart", location=(0, -1500, 100), rotation=(0, 90, 0))
+    _build_gameplay()
 
     level_utils.save_current_level()
     unreal.log("os_content: built {}".format(LEVEL_PATH))

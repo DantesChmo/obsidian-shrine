@@ -1,0 +1,127 @@
+{
+	"Characters": [
+		{
+			"Id": "player",
+			"DisplayName": "Pilgrim",
+			"MaxHealth": 100,
+			"MaxStamina": 100,
+			"StaminaRegen": 38,
+			"StaminaRegenDelay": 0.8,
+			"MaxPoise": 0,
+			"WalkSpeed": 420,
+			"SprintSpeed": 650,
+			"SprintStaminaPerSecond": 12,
+			"Weapon": "pilgrim_sword",
+			"PlaceholderColor": "#4F8FE0",
+			"Actions": {
+				"Dodge": "player_dodge",
+				"Stagger": "react_stagger",
+				"GuardBreak": "react_guard_break",
+				"Parried": "react_parried",
+				"Death": "react_death"
+			}
+		}
+	],
+	"Weapons": [
+		{
+			"Id": "pilgrim_sword",
+			"Damage": 22,
+			"PoiseDamage": 20,
+			"Reach": 180,
+			"Radius": 60,
+			"GuardDamageReduction": 0.85,
+			"GuardStaminaScale": 0.9,
+			"Actions": {
+				"Light": "player_light_1",
+				"Heavy": "player_heavy",
+				"Guard": "player_guard"
+			}
+		}
+	],
+	"Actions": [
+		{
+			"Id": "player_light_1",
+			"Duration": 0.7,
+			"StaminaCost": 14,
+			"bSnapFacing": true,
+			"ComboNext": "player_light_2",
+			"MoveDistance": 80,
+			"MoveStart": 0.12,
+			"MoveEnd": 0.32,
+			"Windows": [
+				{ "Type": "Hit", "Start": 0.25, "End": 0.4 },
+				{ "Type": "Cancel", "Start": 0.5 }
+			]
+		},
+		{
+			"Id": "player_light_2",
+			"Duration": 0.75,
+			"StaminaCost": 14,
+			"bSnapFacing": true,
+			"ComboNext": "player_light_3",
+			"DamageScale": 1.1,
+			"MoveDistance": 80,
+			"MoveStart": 0.12,
+			"MoveEnd": 0.32,
+			"Windows": [
+				{ "Type": "Hit", "Start": 0.25, "End": 0.4 },
+				{ "Type": "Cancel", "Start": 0.55 }
+			]
+		},
+		{
+			"Id": "player_light_3",
+			"Duration": 0.95,
+			"StaminaCost": 18,
+			"bSnapFacing": true,
+			"DamageScale": 1.4,
+			"PoiseDamageScale": 1.5,
+			"MoveDistance": 120,
+			"MoveStart": 0.2,
+			"MoveEnd": 0.42,
+			"Windows": [
+				{ "Type": "Hit", "Start": 0.35, "End": 0.5 },
+				{ "Type": "Cancel", "Start": 0.8 }
+			]
+		},
+		{
+			"Id": "player_heavy",
+			"Duration": 1.2,
+			"StaminaCost": 28,
+			"bSnapFacing": true,
+			"DamageScale": 2.0,
+			"PoiseDamageScale": 2.5,
+			"MoveDistance": 140,
+			"MoveStart": 0.4,
+			"MoveEnd": 0.65,
+			"Windows": [
+				{ "Type": "HyperArmor", "Start": 0.3, "End": 0.75 },
+				{ "Type": "Hit", "Start": 0.55, "End": 0.75 },
+				{ "Type": "Cancel", "Start": 1.0 }
+			]
+		},
+		{
+			"Id": "player_dodge",
+			"Duration": 0.7,
+			"StaminaCost": 18,
+			"bSnapFacing": true,
+			"MoveDirection": "Input",
+			"MoveDistance": 420,
+			"MoveStart": 0.0,
+			"MoveEnd": 0.5,
+			"Windows": [
+				{ "Type": "Invulnerable", "Start": 0.05, "End": 0.4 },
+				{ "Type": "Cancel", "Start": 0.6 }
+			]
+		},
+		{
+			"Id": "player_guard",
+			"Duration": 0,
+			"MoveSpeedScale": 0.45,
+			"StaminaRegenScale": 0.3,
+			"Windows": [
+				{ "Type": "PerfectGuard", "Start": 0.0, "End": 0.18 },
+				{ "Type": "Guard", "Start": 0.0 }
+			]
+		}
+	]
+}
