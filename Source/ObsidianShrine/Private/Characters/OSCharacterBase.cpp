@@ -19,9 +19,6 @@
 
 namespace
 {
-	/** Anything below this height is treated as a fall to death. */
-	const float OSKillHeight = -3000.f;
-
 	const FLinearColor InvulnerableColor(0.9f, 0.9f, 1.f);
 	const FLinearColor DeadColor(0.05f, 0.05f, 0.05f);
 }
@@ -62,11 +59,8 @@ AOSCharacterBase::AOSCharacterBase()
 	bUseControllerRotationYaw = false;
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
-	UCharacterMovementComponent* Movement = GetCharacterMovement();
-	Movement->bOrientRotationToMovement = true;
-	Movement->RotationRate = FRotator(0.f, 720.f, 0.f);
-	Movement->MaxAcceleration = 4096.f;
-	Movement->BrakingDecelerationWalking = 4096.f;
+	// Speeds, turn rate and acceleration come from the character definition (ApplyDefinition).
+	GetCharacterMovement()->bOrientRotationToMovement = true;
 }
 
 void AOSCharacterBase::BeginPlay()
@@ -80,9 +74,28 @@ void AOSCharacterBase::BeginPlay()
 	Stats->OnDeath.AddUObject(this, &AOSCharacterBase::HandleDeath);
 
 	ApplyDefinition(CharacterId);
+
+	if (UOSDataSubsystem* Data = UOSDataSubsystem::Get())
+	{
+		Data->OnReloaded.AddUObject(this, &AOSCharacterBase::HandleDataReloaded);
+	}
 }
 
-bool AOSCharacterBase::ApplyDefinition(FName InCharacterId)
+void AOSCharacterBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (UOSDataSubsystem* Data = UOSDataSubsystem::Get())
+	{
+		Data->OnReloaded.RemoveAll(this);
+	}
+	Super::EndPlay(EndPlayReason);
+}
+
+void AOSCharacterBase::HandleDataReloaded()
+{
+	ApplyDefinition(CharacterId, true);
+}
+
+bool AOSCharacterBase::ApplyDefinition(FName InCharacterId, bool bKeepState)
 {
 	const UOSDataSubsystem* Data = UOSDataSubsystem::Get();
 	const FOSCharacterDef* Found = Data ? Data->FindCharacter(InCharacterId) : nullptr;
@@ -94,7 +107,14 @@ bool AOSCharacterBase::ApplyDefinition(FName InCharacterId)
 
 	CharacterId = InCharacterId;
 	Definition = *Found;
-	Stats->InitFromDef(Definition);
+	if (bKeepState)
+	{
+		Stats->UpdateFromDef(Definition);
+	}
+	else
+	{
+		Stats->InitFromDef(Definition);
+	}
 	Combat->Faction = Faction;
 
 	TMap<FName, FName> Slots;
@@ -107,7 +127,11 @@ bool AOSCharacterBase::ApplyDefinition(FName InCharacterId)
 	Action->SetSlotMap(Slots);
 
 	SetActorScale3D(FVector(FMath::Max(0.1f, Definition.Scale)));
-	GetCharacterMovement()->MaxWalkSpeed = Definition.WalkSpeed;
+	UCharacterMovementComponent* Movement = GetCharacterMovement();
+	Movement->MaxWalkSpeed = Definition.WalkSpeed;
+	Movement->RotationRate = FRotator(0.f, Definition.TurnRate, 0.f);
+	Movement->MaxAcceleration = Definition.Acceleration;
+	Movement->BrakingDecelerationWalking = Definition.BrakingDeceleration;
 
 	ApplyVisuals();
 	return true;
@@ -148,7 +172,10 @@ void AOSCharacterBase::ApplyVisuals()
 	PlaceholderNose->SetVisibility(!bHasSkeletalMesh);
 
 	BaseColor = Definition.PlaceholderColor.IsEmpty() ? FLinearColor::Gray : FLinearColor(FColor::FromHex(Definition.PlaceholderColor));
-	BodyMaterial = PlaceholderBody->CreateAndSetMaterialInstanceDynamic(0);
+	if (!BodyMaterial)
+	{
+		BodyMaterial = PlaceholderBody->CreateAndSetMaterialInstanceDynamic(0);
+	}
 	TintState = -1;
 
 	UStaticMesh* ImportedWeapon = Combat->GetWeapon().Mesh.IsEmpty() ? nullptr : Cast<UStaticMesh>(FSoftObjectPath(Combat->GetWeapon().Mesh).TryLoad());
@@ -177,7 +204,7 @@ void AOSCharacterBase::Tick(float DeltaTime)
 		{
 			LastGroundedLocation = GetActorLocation();
 		}
-		if (GetActorLocation().Z < OSKillHeight)
+		if (GetActorLocation().Z < UOSDataSubsystem::Settings().Death.KillHeight)
 		{
 			Stats->Kill();
 		}
@@ -243,7 +270,7 @@ void AOSCharacterBase::UpdateFacing(float DeltaTime)
 		if (!ToTarget.IsNearlyZero())
 		{
 			const FRotator Desired(0.f, ToTarget.Rotation().Yaw, 0.f);
-			SetActorRotation(FMath::RInterpConstantTo(GetActorRotation(), Desired, DeltaTime, TurnRate));
+			SetActorRotation(FMath::RInterpConstantTo(GetActorRotation(), Desired, DeltaTime, Definition.TurnRate));
 		}
 	}
 }

@@ -6,6 +6,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Core/OSGameMode.h"
 #include "Core/OSProgress.h"
+#include "Data/OSDataSubsystem.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "UObject/ConstructorHelpers.h"
@@ -20,8 +21,13 @@ AOSCheckpoint::AOSCheckpoint()
 FTransform AOSCheckpoint::GetRespawnTransform() const
 {
 	const FVector Forward = GetActorForwardVector();
-	const FVector Location = GetActorLocation() + Forward * 180.f + FVector(0.f, 0.f, 100.f);
+	const FVector Location = GetActorLocation() + Forward * RespawnDistance + FVector(0.f, 0.f, RespawnHeight);
 	return FTransform(FRotator(0.f, (-Forward).Rotation().Yaw, 0.f), Location);
+}
+
+FString AOSCheckpoint::GetPrompt() const
+{
+	return UOSDataSubsystem::Texts().PromptShrine;
 }
 
 void AOSCheckpoint::Interact(AOSPlayerCharacter* Player)
@@ -37,6 +43,11 @@ AOSCurrencyPickup::AOSCurrencyPickup()
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(TEXT("/Engine/BasicShapes/Sphere.Sphere"));
 	Visual->SetStaticMesh(SphereMesh.Object);
 	Visual->SetRelativeScale3D(FVector(0.4f));
+}
+
+FString AOSCurrencyPickup::GetPrompt() const
+{
+	return UOSDataSubsystem::Texts().PromptPickup;
 }
 
 void AOSCurrencyPickup::Interact(AOSPlayerCharacter* Player)

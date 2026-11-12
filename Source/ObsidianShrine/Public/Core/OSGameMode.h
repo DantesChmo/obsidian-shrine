@@ -11,7 +11,8 @@ class AOSPlayerCharacter;
 
 /**
  * Rules of the death loop: rest at a shrine, die and drop currency, respawn at the last shrine with the
- * enemies reset, recover the drop or lose it on the next death. Progress lives in UOSProgressSubsystem.
+ * enemies reset, recover the drop or lose it on the next death. Progress lives in UOSProgressSubsystem;
+ * the numbers (respawn delay, what a death costs) are the Death section of the game settings.
  */
 UCLASS()
 class OBSIDIANSHRINE_API AOSGameMode : public AGameModeBase
@@ -20,9 +21,6 @@ class OBSIDIANSHRINE_API AOSGameMode : public AGameModeBase
 
 public:
 	AOSGameMode();
-
-	/** Seconds between the player's death and the respawn. */
-	float RespawnDelay = 3.5f;
 
 	void HandlePlayerDeath(AOSPlayerCharacter* Player);
 	void HandleEnemyDeath(AOSEnemyCharacter* Enemy);
@@ -41,5 +39,5 @@ private:
 	/** Makes the world match the save: one pickup if currency was dropped on this map, none otherwise. */
 	void RefreshDroppedPickup();
 	AOSCheckpoint* FindCheckpoint(FName CheckpointId) const;
-	void ShowMessage(const FString& Message, float Duration = 3.f) const;
+	void ShowMessage(const FString& Message, float Duration) const;
 };

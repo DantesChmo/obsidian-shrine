@@ -8,6 +8,7 @@
 #include "Core/OSProgress.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/WorldSettings.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -86,9 +87,14 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOSProgressDeathLoopTest, "ObsidianShrine.Progr
 
 bool FOSProgressDeathLoopTest::RunTest(const FString& Parameters)
 {
+	// The classic rules, spelled out so the test does not depend on the shipped settings.
+	FOSDeathDef Rules;
+	Rules.CurrencyLossFraction = 1.f;
+	Rules.bKeepPreviousDrop = false;
+
 	FOSProgressState State;
 	State.AddCurrency(300);
-	State.HandleDeath(FVector(10.f, 20.f, 30.f), TEXT("L_Test"));
+	State.HandleDeath(FVector(10.f, 20.f, 30.f), TEXT("L_Test"), Rules);
 	TestEqual(TEXT("nothing in hand after death"), State.Currency, 0);
 	TestEqual(TEXT("everything dropped"), State.DroppedCurrency, 300);
 	TestEqual(TEXT("drop location"), State.DroppedLocation, FVector(10.f, 20.f, 30.f));
@@ -98,9 +104,9 @@ bool FOSProgressDeathLoopTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("recovered on top of new earnings"), State.Currency, 350);
 	TestEqual(TEXT("nothing left on the ground"), State.DroppedCurrency, 0);
 
-	State.HandleDeath(FVector::ZeroVector, TEXT("L_Test"));
+	State.HandleDeath(FVector::ZeroVector, TEXT("L_Test"), Rules);
 	State.AddCurrency(20);
-	State.HandleDeath(FVector::ZeroVector, TEXT("L_Test"));
+	State.HandleDeath(FVector::ZeroVector, TEXT("L_Test"), Rules);
 	TestEqual(TEXT("dying again loses the earlier drop"), State.DroppedCurrency, 20);
 
 	State.MarkDefeated(TEXT("boss_a"));
@@ -109,6 +115,42 @@ bool FOSProgressDeathLoopTest::RunTest(const FString& Parameters)
 	TestEqual(TEXT("defeated list has no duplicates or None"), State.Defeated.Num(), 1);
 	TestTrue(TEXT("boss_a defeated"), State.IsDefeated(TEXT("boss_a")));
 	TestFalse(TEXT("None is never defeated"), State.IsDefeated(NAME_None));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOSProgressDeathRulesTest, "ObsidianShrine.Progress.DeathRulesComeFromSettings", OS_TEST_FLAGS)
+
+bool FOSProgressDeathRulesTest::RunTest(const FString& Parameters)
+{
+	FOSDeathDef Half;
+	Half.CurrencyLossFraction = 0.5f;
+	Half.bKeepPreviousDrop = true;
+
+	FOSProgressState State;
+	State.AddCurrency(300);
+	State.HandleDeath(FVector(1.f, 0.f, 0.f), TEXT("L_A"), Half);
+	TestEqual(TEXT("half stays in hand"), State.Currency, 150);
+	TestEqual(TEXT("half is dropped"), State.DroppedCurrency, 150);
+
+	State.HandleDeath(FVector(2.f, 0.f, 0.f), TEXT("L_B"), Half);
+	TestEqual(TEXT("half of the rest stays in hand"), State.Currency, 75);
+	TestEqual(TEXT("the earlier drop is carried to the new spot"), State.DroppedCurrency, 225);
+	TestEqual(TEXT("the drop moved"), State.DroppedLocation, FVector(2.f, 0.f, 0.f));
+	TestEqual(TEXT("the drop moved to the new map"), State.DroppedMap, FString(TEXT("L_B")));
+
+	FOSDeathDef Free;
+	Free.CurrencyLossFraction = 0.f;
+	Free.bKeepPreviousDrop = false;
+	State.HandleDeath(FVector(3.f, 0.f, 0.f), TEXT("L_C"), Free);
+	TestEqual(TEXT("a free death costs nothing in hand"), State.Currency, 75);
+	TestEqual(TEXT("but the earlier drop is lost"), State.DroppedCurrency, 0);
+	TestTrue(TEXT("no map holds a drop"), State.DroppedMap.IsEmpty());
+
+	FOSDeathDef OutOfRange;
+	OutOfRange.CurrencyLossFraction = 7.f;
+	State.HandleDeath(FVector::ZeroVector, TEXT("L_C"), OutOfRange);
+	TestEqual(TEXT("a fraction above 1 cannot take more than there is"), State.Currency, 0);
+	TestEqual(TEXT("everything dropped"), State.DroppedCurrency, 75);
 	return true;
 }
 
@@ -262,6 +304,55 @@ bool FOSWorldAttackTest::RunTest(const FString& Parameters)
 	// Sweeping again within the same window must not hit the same target twice.
 	Attacker->GetCombat()->TickComponent(0.016f, LEVELTICK_All, nullptr);
 	TestEqual(TEXT("a target is hit once per window"), InFront->GetStats()->GetHealth(), 80.f);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOSWorldReapplyTest, "ObsidianShrine.World.ReappliedDefinitionKeepsState", OS_TEST_FLAGS)
+
+bool FOSWorldReapplyTest::RunTest(const FString& Parameters)
+{
+	// What os.ReloadData does to a living character: new numbers, same fight.
+	FOSCharacterDef Before;
+	Before.Id = TEXT("test_reapply_before");
+	Before.MaxHealth = 100.f;
+	Before.WalkSpeed = 300.f;
+	Before.TurnRate = 200.f;
+	Before.Acceleration = 1000.f;
+	Before.BrakingDeceleration = 900.f;
+	OSTest::Register(Before);
+
+	FOSCharacterDef After = Before;
+	After.Id = TEXT("test_reapply_after");
+	After.MaxHealth = 60.f;
+	After.WalkSpeed = 500.f;
+	After.TurnRate = 450.f;
+	After.Acceleration = 2000.f;
+	After.BrakingDeceleration = 1800.f;
+	OSTest::Register(After);
+
+	FOSTestWorld TestWorld;
+	AOSCharacterBase* Character = TestWorld.Spawn(TEXT("test_reapply_before"), EOSFaction::Enemy, FVector::ZeroVector);
+	const UCharacterMovementComponent* Movement = Character->GetCharacterMovement();
+	TestEqual(TEXT("walk speed from the definition"), Movement->MaxWalkSpeed, 300.f);
+	TestEqual(TEXT("turn rate from the definition"), (float)Movement->RotationRate.Yaw, 200.f);
+	TestEqual(TEXT("acceleration from the definition"), Movement->MaxAcceleration, 1000.f);
+	TestEqual(TEXT("braking from the definition"), Movement->BrakingDecelerationWalking, 900.f);
+
+	Character->GetStats()->ApplyDamage(70.f);
+	TestTrue(TEXT("the other definition applies"), Character->ApplyDefinition(TEXT("test_reapply_after"), true));
+	TestEqual(TEXT("new limit"), Character->GetStats()->GetMaxHealth(), 60.f);
+	TestEqual(TEXT("the wound is kept"), Character->GetStats()->GetHealth(), 30.f);
+	TestEqual(TEXT("new walk speed"), Movement->MaxWalkSpeed, 500.f);
+	TestEqual(TEXT("new turn rate"), (float)Movement->RotationRate.Yaw, 450.f);
+	TestEqual(TEXT("new acceleration"), Movement->MaxAcceleration, 2000.f);
+	TestEqual(TEXT("new braking"), Movement->BrakingDecelerationWalking, 1800.f);
+
+	TestTrue(TEXT("a fresh apply refills"), Character->ApplyDefinition(TEXT("test_reapply_before"), false));
+	TestEqual(TEXT("full health"), Character->GetStats()->GetHealth(), 100.f);
+
+	AddExpectedError(TEXT("unknown character definition"), EAutomationExpectedErrorFlags::Contains, 1);
+	TestFalse(TEXT("an unknown definition is refused"), Character->ApplyDefinition(TEXT("test_reapply_missing"), true));
+	TestEqual(TEXT("and changes nothing"), Character->GetStats()->GetMaxHealth(), 100.f);
 	return true;
 }
 

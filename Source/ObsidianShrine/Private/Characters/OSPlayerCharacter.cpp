@@ -5,42 +5,51 @@
 #include "Combat/OSActionComponent.h"
 #include "Combat/OSLockOnComponent.h"
 #include "Core/OSGameMode.h"
+#include "Data/OSDataSubsystem.h"
 #include "Engine/World.h"
 #include "EnhancedInputComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "InputActionValue.h"
 #include "World/OSInteractable.h"
 
-namespace
-{
-	const float MouseSensitivity = 0.12f;
-	/** Degrees per second at full stick deflection. */
-	const float StickLookSpeed = 160.f;
-	const float MinPitch = -65.f;
-	const float MaxPitch = 55.f;
-	/** Holding the gamepad dodge button longer than this sprints instead of dodging. */
-	const float DodgeTapTime = 0.25f;
-}
-
 AOSPlayerCharacter::AOSPlayerCharacter()
 {
-	CharacterId = TEXT("player");
 	Faction = EOSFaction::Player;
 	AutoPossessAI = EAutoPossessAI::Disabled;
 
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetRootComponent());
-	CameraBoom->TargetArmLength = 430.f;
-	CameraBoom->SocketOffset = FVector(0.f, 0.f, 70.f);
 	CameraBoom->bUsePawnControlRotation = true;
-	CameraBoom->bEnableCameraLag = true;
-	CameraBoom->CameraLagSpeed = 12.f;
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	Camera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	Camera->bUsePawnControlRotation = false;
 
 	LockOn = CreateDefaultSubobject<UOSLockOnComponent>(TEXT("LockOn"));
+}
+
+void AOSPlayerCharacter::BeginPlay()
+{
+	// Before Super, which builds the character from CharacterId.
+	CharacterId = UOSDataSubsystem::Settings().PlayerCharacter;
+	ApplyCameraSettings();
+	Super::BeginPlay();
+}
+
+void AOSPlayerCharacter::HandleDataReloaded()
+{
+	CharacterId = UOSDataSubsystem::Settings().PlayerCharacter;
+	ApplyCameraSettings();
+	Super::HandleDataReloaded();
+}
+
+void AOSPlayerCharacter::ApplyCameraSettings()
+{
+	const FOSCameraDef& Settings = UOSDataSubsystem::Settings().Camera;
+	CameraBoom->TargetArmLength = Settings.ArmLength;
+	CameraBoom->SocketOffset = FVector(0.f, 0.f, Settings.HeightOffset);
+	CameraBoom->bEnableCameraLag = Settings.LagSpeed > 0.f;
+	CameraBoom->CameraLagSpeed = Settings.LagSpeed;
 }
 
 AActor* AOSPlayerCharacter::GetCombatTarget() const
@@ -64,7 +73,7 @@ void AOSPlayerCharacter::Tick(float DeltaTime)
 	{
 		DodgeSprintHeldTime += DeltaTime;
 	}
-	bWantsSprint = bSprintKeyHeld || (bDodgeSprintHeld && DodgeSprintHeldTime > DodgeTapTime);
+	bWantsSprint = bSprintKeyHeld || (bDodgeSprintHeld && DodgeSprintHeldTime > UOSDataSubsystem::Settings().Controls.DodgeTapTime);
 
 	Super::Tick(DeltaTime);
 
@@ -137,22 +146,23 @@ void AOSPlayerCharacter::Look(const FVector2D& Delta)
 	{
 		return;
 	}
+	const FOSCameraDef& Settings = UOSDataSubsystem::Settings().Camera;
 	FRotator Rotation = GetController()->GetControlRotation();
 	Rotation.Yaw += Delta.X;
-	Rotation.Pitch = FMath::Clamp(FRotator::NormalizeAxis(Rotation.Pitch) + Delta.Y, MinPitch, MaxPitch);
+	Rotation.Pitch = FMath::Clamp(FRotator::NormalizeAxis(Rotation.Pitch) + Delta.Y, Settings.MinPitch, Settings.MaxPitch);
 	Rotation.Roll = 0.f;
 	GetController()->SetControlRotation(Rotation);
 }
 
 void AOSPlayerCharacter::OnLookMouse(const FInputActionValue& Value)
 {
-	Look(Value.Get<FVector2D>() * MouseSensitivity);
+	Look(Value.Get<FVector2D>() * UOSDataSubsystem::Settings().Camera.MouseSensitivity);
 }
 
 void AOSPlayerCharacter::OnLookStick(const FInputActionValue& Value)
 {
 	const float DeltaTime = GetWorld() ? GetWorld()->GetDeltaSeconds() : 0.f;
-	Look(Value.Get<FVector2D>() * StickLookSpeed * DeltaTime);
+	Look(Value.Get<FVector2D>() * UOSDataSubsystem::Settings().Camera.StickSpeed * DeltaTime);
 }
 
 void AOSPlayerCharacter::OnLight(const FInputActionValue& Value)
@@ -200,7 +210,7 @@ void AOSPlayerCharacter::OnDodgeSprintStart(const FInputActionValue& Value)
 
 void AOSPlayerCharacter::OnDodgeSprintEnd(const FInputActionValue& Value)
 {
-	if (bDodgeSprintHeld && DodgeSprintHeldTime <= DodgeTapTime)
+	if (bDodgeSprintHeld && DodgeSprintHeldTime <= UOSDataSubsystem::Settings().Controls.DodgeTapTime)
 	{
 		GetAction()->RequestSlot(OSSlots::Dodge);
 	}

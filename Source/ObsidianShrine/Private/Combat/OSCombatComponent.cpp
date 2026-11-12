@@ -43,6 +43,21 @@ FOSHitResult OSCombat::ResolveHit(const FOSHitInfo& Hit, const FOSDefenseState& 
 	return Result;
 }
 
+bool OSCombat::IsInGuardArc(const FVector& Forward, const FVector& ToAttacker, float GuardAngle)
+{
+	const FVector Direction = ToAttacker.GetSafeNormal2D();
+	if (Direction.IsNearlyZero() || GuardAngle >= 360.f)
+	{
+		return true;
+	}
+	if (GuardAngle <= 0.f)
+	{
+		return false;
+	}
+	const float Cosine = FVector::DotProduct(Forward.GetSafeNormal2D(), Direction);
+	return Cosine >= FMath::Cos(FMath::DegreesToRadians(GuardAngle * 0.5f)) - KINDA_SMALL_NUMBER;
+}
+
 UOSCombatComponent::UOSCombatComponent()
 {
 	PrimaryComponentTick.bCanEverTick = true;
@@ -161,8 +176,7 @@ FOSDefenseState UOSCombatComponent::BuildDefenseState(const FOSHitInfo& Hit) con
 	}
 	if (const AActor* Owner = GetOwner())
 	{
-		const FVector ToAttacker = (Hit.Origin - Owner->GetActorLocation()).GetSafeNormal2D();
-		Defense.bFacingAttacker = ToAttacker.IsNearlyZero() || FVector::DotProduct(Owner->GetActorForwardVector(), ToAttacker) > 0.f;
+		Defense.bFacingAttacker = OSCombat::IsInGuardArc(Owner->GetActorForwardVector(), Hit.Origin - Owner->GetActorLocation(), Weapon.GuardAngle);
 	}
 	Defense.GuardDamageReduction = Weapon.GuardDamageReduction;
 	Defense.GuardStaminaScale = Weapon.GuardStaminaScale;

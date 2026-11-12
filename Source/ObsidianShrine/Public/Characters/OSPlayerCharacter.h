@@ -11,7 +11,10 @@ class UOSLockOnComponent;
 class USpringArmComponent;
 struct FInputActionValue;
 
-/** The player: third-person camera, input, lock-on and interaction on top of the shared combat core. */
+/**
+ * The player: third-person camera, input, lock-on and interaction on top of the shared combat core.
+ * Which character it is and how the camera behaves come from the game settings.
+ */
 UCLASS()
 class OBSIDIANSHRINE_API AOSPlayerCharacter : public AOSCharacterBase
 {
@@ -26,11 +29,13 @@ public:
 	virtual AActor* GetCombatTarget() const override;
 	virtual FVector GetDesiredActionDirection() const override;
 
+	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
 protected:
 	virtual void OnDeath() override;
+	virtual void HandleDataReloaded() override;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Obsidian")
@@ -50,6 +55,7 @@ private:
 	bool bDodgeSprintHeld = false;
 	float DodgeSprintHeldTime = 0.f;
 
+	void ApplyCameraSettings();
 	void Look(const FVector2D& Delta);
 
 	void OnMove(const FInputActionValue& Value);

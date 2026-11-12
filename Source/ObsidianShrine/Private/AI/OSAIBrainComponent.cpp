@@ -10,9 +10,15 @@ UOSAIBrainComponent::UOSAIBrainComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 }
 
-void UOSAIBrainComponent::SetProfile(const FOSAIProfileDef& InProfile)
+void UOSAIBrainComponent::SetProfile(const FOSAIProfileDef& InProfile, bool bKeepState)
 {
 	Profile = InProfile;
+	if (bKeepState && bHasProfile)
+	{
+		// The new profile may have fewer phases than the fight has already gone through.
+		Phase = FMath::Min(Phase, Profile.Phases.Num());
+		return;
+	}
 	bHasProfile = true;
 	Phase = 0;
 	Cooldowns.Reset();

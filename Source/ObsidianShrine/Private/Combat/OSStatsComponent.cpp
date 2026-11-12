@@ -7,13 +7,23 @@ UOSStatsComponent::UOSStatsComponent()
 
 void UOSStatsComponent::InitFromDef(const FOSCharacterDef& Def)
 {
+	UpdateFromDef(Def);
+	RestoreAll();
+}
+
+void UOSStatsComponent::UpdateFromDef(const FOSCharacterDef& Def)
+{
 	MaxHealth = FMath::Max(1.f, Def.MaxHealth);
 	MaxStamina = FMath::Max(0.f, Def.MaxStamina);
 	StaminaRegen = Def.StaminaRegen;
 	StaminaRegenDelay = Def.StaminaRegenDelay;
 	MaxPoise = FMath::Max(0.f, Def.MaxPoise);
 	PoiseResetDelay = Def.PoiseResetDelay;
-	RestoreAll();
+
+	// A living character is never killed by a smaller limit; a dead one stays at zero.
+	Health = bDead ? 0.f : FMath::Clamp(Health, 1.f, MaxHealth);
+	Stamina = FMath::Min(Stamina, MaxStamina);
+	Poise = FMath::Min(Poise, MaxPoise);
 }
 
 void UOSStatsComponent::RestoreAll()

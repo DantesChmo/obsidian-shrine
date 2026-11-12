@@ -59,6 +59,12 @@ namespace OSCombat
 	 * Staggered and Killed are decided by UOSCombatComponent once the numbers are applied to stats.
 	 */
 	OBSIDIANSHRINE_API FOSHitResult ResolveHit(const FOSHitInfo& Hit, const FOSDefenseState& Defense);
+
+	/**
+	 * Whether a guard covers an attack coming from ToAttacker. GuardAngle is the full width of the frontal
+	 * sector in degrees. An attacker standing exactly on the defender counts as covered.
+	 */
+	OBSIDIANSHRINE_API bool IsInGuardArc(const FVector& Forward, const FVector& ToAttacker, float GuardAngle);
 }
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOSOnHitReceived, const FOSHitResult&, const FOSHitInfo&);

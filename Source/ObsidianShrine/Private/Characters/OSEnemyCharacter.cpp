@@ -6,12 +6,6 @@
 #include "Engine/World.h"
 #include "ObsidianShrine.h"
 
-namespace
-{
-	/** Seconds a corpse stays before it is removed. */
-	const float CorpseLifetime = 6.f;
-}
-
 AOSEnemyCharacter::AOSEnemyCharacter()
 {
 	Faction = EOSFaction::Enemy;
@@ -21,12 +15,22 @@ AOSEnemyCharacter::AOSEnemyCharacter()
 void AOSEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	ApplyProfile(false);
+}
 
+void AOSEnemyCharacter::HandleDataReloaded()
+{
+	Super::HandleDataReloaded();
+	ApplyProfile(true);
+}
+
+void AOSEnemyCharacter::ApplyProfile(bool bKeepState)
+{
 	const UOSDataSubsystem* Data = UOSDataSubsystem::Get();
 	const FOSAIProfileDef* Profile = Data ? Data->FindAIProfile(GetDefinition().AIProfile) : nullptr;
 	if (Profile)
 	{
-		Brain->SetProfile(*Profile);
+		Brain->SetProfile(*Profile, bKeepState);
 	}
 	else
 	{
@@ -56,5 +60,5 @@ void AOSEnemyCharacter::OnDeath()
 	{
 		GameMode->HandleEnemyDeath(this);
 	}
-	SetLifeSpan(CorpseLifetime);
+	SetLifeSpan(UOSDataSubsystem::Settings().Death.CorpseLifetime);
 }

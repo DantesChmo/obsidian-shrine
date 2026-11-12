@@ -334,6 +334,75 @@ bool FOSCombatResolveTest::RunTest(const FString& Parameters)
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOSCombatGuardArcTest, "ObsidianShrine.Combat.GuardArcFollowsWeaponAngle", OS_TEST_FLAGS)
+
+bool FOSCombatGuardArcTest::RunTest(const FString& Parameters)
+{
+	const FVector Forward = FVector::ForwardVector;
+	const FVector Front(100.f, 0.f, 0.f);
+	const FVector FrontSide(100.f, 100.f, 0.f);    // 45 degrees off
+	const FVector Side(0.f, 100.f, 0.f);           // 90 degrees off
+	const FVector BackSide(-100.f, 100.f, 0.f);    // 135 degrees off
+	const FVector Back(-100.f, 0.f, 0.f);
+
+	TestTrue(TEXT("180: front"), OSCombat::IsInGuardArc(Forward, Front, 180.f));
+	TestTrue(TEXT("180: 45 degrees off"), OSCombat::IsInGuardArc(Forward, FrontSide, 180.f));
+	TestFalse(TEXT("180: behind the shoulder"), OSCombat::IsInGuardArc(Forward, BackSide, 180.f));
+	TestFalse(TEXT("180: back"), OSCombat::IsInGuardArc(Forward, Back, 180.f));
+
+	TestTrue(TEXT("60: front"), OSCombat::IsInGuardArc(Forward, Front, 60.f));
+	TestFalse(TEXT("60: 45 degrees off is outside a 30 degree half-angle"), OSCombat::IsInGuardArc(Forward, FrontSide, 60.f));
+
+	TestTrue(TEXT("270: behind the shoulder is covered"), OSCombat::IsInGuardArc(Forward, BackSide, 270.f));
+	TestFalse(TEXT("270: straight back is not"), OSCombat::IsInGuardArc(Forward, Back, 270.f));
+
+	TestTrue(TEXT("360: all around"), OSCombat::IsInGuardArc(Forward, Back, 360.f));
+	TestFalse(TEXT("0: guards nothing"), OSCombat::IsInGuardArc(Forward, Front, 0.f));
+
+	TestTrue(TEXT("height does not matter"), OSCombat::IsInGuardArc(Forward, FVector(100.f, 0.f, 500.f), 60.f));
+	TestTrue(TEXT("an attacker standing on the defender is covered"), OSCombat::IsInGuardArc(Forward, FVector::ZeroVector, 60.f));
+	TestTrue(TEXT("exactly on the edge of 180 counts as covered"), OSCombat::IsInGuardArc(Forward, Side, 180.f));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOSStatsUpdateTest, "ObsidianShrine.Stats.UpdateFromDefKeepsState", OS_TEST_FLAGS)
+
+bool FOSStatsUpdateTest::RunTest(const FString& Parameters)
+{
+	FOSTestRig Rig(100.f, 100.f, 50.f);
+	Rig.Stats->ApplyDamage(40.f);
+	Rig.Stats->SpendStamina(30.f);
+
+	FOSCharacterDef Bigger;
+	Bigger.MaxHealth = 200.f;
+	Bigger.MaxStamina = 150.f;
+	Bigger.MaxPoise = 80.f;
+	Rig.Stats->UpdateFromDef(Bigger);
+	TestEqual(TEXT("limit raised"), Rig.Stats->GetMaxHealth(), 200.f);
+	TestEqual(TEXT("health untouched"), Rig.Stats->GetHealth(), 60.f);
+	TestEqual(TEXT("stamina untouched"), Rig.Stats->GetStamina(), 70.f);
+
+	FOSCharacterDef Smaller;
+	Smaller.MaxHealth = 50.f;
+	Smaller.MaxStamina = 40.f;
+	Smaller.MaxPoise = 0.f;
+	Rig.Stats->UpdateFromDef(Smaller);
+	TestEqual(TEXT("health clamped to the new limit"), Rig.Stats->GetHealth(), 50.f);
+	TestEqual(TEXT("stamina clamped to the new limit"), Rig.Stats->GetStamina(), 40.f);
+	TestEqual(TEXT("poise clamped to the new limit"), Rig.Stats->GetPoise(), 0.f);
+	TestFalse(TEXT("a smaller limit never kills"), Rig.Stats->IsDead());
+
+	Rig.Stats->Kill();
+	Rig.Stats->UpdateFromDef(Bigger);
+	TestTrue(TEXT("the dead stay dead"), Rig.Stats->IsDead());
+	TestEqual(TEXT("with no health"), Rig.Stats->GetHealth(), 0.f);
+
+	Rig.Stats->InitFromDef(Bigger);
+	TestFalse(TEXT("InitFromDef starts fresh"), Rig.Stats->IsDead());
+	TestEqual(TEXT("at full health"), Rig.Stats->GetHealth(), 200.f);
+	return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOSCombatReceiveTest, "ObsidianShrine.Combat.ReceiveHitDrivesReactions", OS_TEST_FLAGS)
 
 bool FOSCombatReceiveTest::RunTest(const FString& Parameters)

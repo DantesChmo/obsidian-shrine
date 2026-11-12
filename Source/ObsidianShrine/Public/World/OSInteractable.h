@@ -17,10 +17,14 @@ class OBSIDIANSHRINE_API AOSInteractable : public AActor
 public:
 	AOSInteractable();
 
+	/** 0: the game-wide InteractRadius from the game settings. */
 	UPROPERTY(EditAnywhere, Category = "Obsidian")
-	float InteractRadius = 260.f;
+	float InteractRadius = 0.f;
 
-	virtual FString GetPrompt() const { return TEXT("Interact"); }
+	float GetInteractRadius() const;
+
+	/** What the object offers, shown after the interact keys. Texts come from the Texts section of the data. */
+	virtual FString GetPrompt() const;
 	virtual bool CanInteract(const AOSPlayerCharacter* Player) const { return true; }
 	virtual void Interact(AOSPlayerCharacter* Player) {}
 

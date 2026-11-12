@@ -5,6 +5,7 @@
 #include "Characters/OSPlayerController.h"
 #include "Combat/OSStatsComponent.h"
 #include "Core/OSProgress.h"
+#include "Data/OSDataSubsystem.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "Kismet/GameplayStatics.h"
@@ -63,14 +64,17 @@ AOSCheckpoint* AOSGameMode::FindCheckpoint(FName CheckpointId) const
 
 void AOSGameMode::HandlePlayerDeath(AOSPlayerCharacter* Player)
 {
+	const FOSDeathDef& Rules = UOSDataSubsystem::Settings().Death;
 	if (UOSProgressSubsystem* Progress = UOSProgressSubsystem::Get(this))
 	{
-		Progress->State.HandleDeath(Player->GetLastGroundedLocation(), UGameplayStatics::GetCurrentLevelName(this, true));
+		Progress->State.HandleDeath(Player->GetLastGroundedLocation(), UGameplayStatics::GetCurrentLevelName(this, true), Rules);
 		Progress->Save();
 	}
 
-	ShowMessage(TEXT("YOU DIED"), RespawnDelay);
-	GetWorldTimerManager().SetTimer(RespawnTimer, this, &AOSGameMode::RespawnPlayer, RespawnDelay, false);
+	// A zero delay still goes through the timer, so the respawn never runs inside the death callback.
+	const float Delay = FMath::Max(Rules.RespawnDelay, KINDA_SMALL_NUMBER);
+	ShowMessage(UOSDataSubsystem::Texts().MessageDied, Delay);
+	GetWorldTimerManager().SetTimer(RespawnTimer, this, &AOSGameMode::RespawnPlayer, Delay, false);
 }
 
 void AOSGameMode::RespawnPlayer()
@@ -107,7 +111,7 @@ void AOSGameMode::HandleEnemyDeath(AOSEnemyCharacter* Enemy)
 	}
 	if (Enemy->IsBoss())
 	{
-		ShowMessage(TEXT("ENEMY FELLED"), 4.f);
+		ShowMessage(UOSDataSubsystem::Texts().MessageBossDefeated, UOSDataSubsystem::Settings().Messages.BossDefeatedDuration);
 	}
 	Progress->Save();
 }
@@ -122,7 +126,7 @@ void AOSGameMode::RestAtCheckpoint(AOSCheckpoint* Checkpoint, AOSPlayerCharacter
 
 	Player->GetStats()->RestoreAll();
 	ResetEnemies();
-	ShowMessage(TEXT("SHRINE KINDLED"), 2.5f);
+	ShowMessage(UOSDataSubsystem::Texts().MessageRested, UOSDataSubsystem::Settings().Messages.RestedDuration);
 }
 
 void AOSGameMode::RecoverDroppedCurrency()

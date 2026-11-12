@@ -31,8 +31,12 @@ public:
 
 protected:
 	virtual void OnDeath() override;
+	virtual void HandleDataReloaded() override;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Obsidian")
 	TObjectPtr<UOSAIBrainComponent> Brain;
+
+	/** Gives the brain the AI profile named by the definition. bKeepState: do not restart the fight. */
+	void ApplyProfile(bool bKeepState);
 };

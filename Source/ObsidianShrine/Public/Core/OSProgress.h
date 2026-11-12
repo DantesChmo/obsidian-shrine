@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Data/OSDataTypes.h"
 #include "GameFramework/SaveGame.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 
@@ -19,7 +20,7 @@ struct OBSIDIANSHRINE_API FOSProgressState
 	UPROPERTY()
 	FName LastCheckpoint;
 
-	/** Currency lying where the player last died. Lost for good on the next death. */
+	/** Currency lying where the player last died. What the next death does to it is up to the death rules. */
 	UPROPERTY()
 	int32 DroppedCurrency = 0;
 
@@ -34,8 +35,11 @@ struct OBSIDIANSHRINE_API FOSProgressState
 	TArray<FName> Defeated;
 
 	void AddCurrency(int32 Amount);
-	/** Moves all held currency to the death spot, replacing whatever was dropped before. */
-	void HandleDeath(const FVector& Location, const FString& Map);
+	/**
+	 * Leaves Rules.CurrencyLossFraction of the held currency at the death spot. Whatever was still lying
+	 * from an earlier death is lost, or moves to the new spot if Rules.bKeepPreviousDrop.
+	 */
+	void HandleDeath(const FVector& Location, const FString& Map, const FOSDeathDef& Rules);
 	/** Returns the amount recovered. */
 	int32 RecoverDropped();
 

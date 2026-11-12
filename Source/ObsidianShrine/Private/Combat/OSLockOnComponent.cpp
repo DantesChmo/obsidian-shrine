@@ -1,6 +1,7 @@
 #include "Combat/OSLockOnComponent.h"
 
 #include "Characters/OSCharacterBase.h"
+#include "Data/OSDataSubsystem.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "GameFramework/Controller.h"
@@ -72,6 +73,7 @@ void UOSLockOnComponent::Toggle()
 		return;
 	}
 
+	const FOSLockOnDef& Settings = UOSDataSubsystem::Settings().LockOn;
 	AOSCharacterBase* Best = nullptr;
 	float BestScore = TNumericLimits<float>::Max();
 	for (TActorIterator<AOSCharacterBase> It(GetWorld()); It; ++It)
@@ -81,7 +83,7 @@ void UOSLockOnComponent::Toggle()
 		{
 			continue;
 		}
-		const float Score = ScoreCandidate(ViewLocation, ViewRotation.Vector(), Candidate->GetActorLocation(), AcquireDistance, AcquireAngle);
+		const float Score = ScoreCandidate(ViewLocation, ViewRotation.Vector(), Candidate->GetActorLocation(), Settings.AcquireDistance, Settings.AcquireAngle);
 		if (Score >= 0.f && Score < BestScore && HasLineOfSight(ViewLocation, Candidate))
 		{
 			Best = Candidate;
@@ -116,7 +118,7 @@ void UOSLockOnComponent::Switch(float Direction)
 		{
 			continue;
 		}
-		if (FVector::Dist(GetOwner()->GetActorLocation(), Candidate->GetActorLocation()) > AcquireDistance)
+		if (FVector::Dist(GetOwner()->GetActorLocation(), Candidate->GetActorLocation()) > UOSDataSubsystem::Settings().LockOn.AcquireDistance)
 		{
 			continue;
 		}
@@ -148,18 +150,19 @@ void UOSLockOnComponent::TickComponent(float DeltaTime, ELevelTick TickType, FAc
 		return;
 	}
 
+	const FOSLockOnDef& Settings = UOSDataSubsystem::Settings().LockOn;
 	const APawn* Pawn = Cast<APawn>(GetOwner());
 	AController* Controller = Pawn ? Pawn->GetController() : nullptr;
-	if (!Controller || !Current->IsAlive() || FVector::Dist(Pawn->GetActorLocation(), Current->GetActorLocation()) > BreakDistance)
+	if (!Controller || !Current->IsAlive() || FVector::Dist(Pawn->GetActorLocation(), Current->GetActorLocation()) > Settings.BreakDistance)
 	{
 		Clear();
 		return;
 	}
 
-	// Aim from above the player's head so close targets do not pitch the camera wildly.
-	const FVector Pivot = Pawn->GetActorLocation() + FVector(0.f, 0.f, 80.f);
+	// Aim from above the player's centre so close targets do not pitch the camera wildly.
+	const FVector Pivot = Pawn->GetActorLocation() + FVector(0.f, 0.f, Settings.PivotHeight);
 	FRotator Desired = (Current->GetActorLocation() - Pivot).Rotation();
-	Desired.Pitch = FMath::Clamp(Desired.Pitch + CameraPitchOffset, -50.f, 30.f);
+	Desired.Pitch = FMath::Clamp(Desired.Pitch + Settings.CameraPitchOffset, Settings.MinPitch, Settings.MaxPitch);
 	Desired.Roll = 0.f;
-	Controller->SetControlRotation(FMath::RInterpTo(Controller->GetControlRotation(), Desired, DeltaTime, CameraInterpSpeed));
+	Controller->SetControlRotation(FMath::RInterpTo(Controller->GetControlRotation(), Desired, DeltaTime, Settings.CameraSpeed));
 }

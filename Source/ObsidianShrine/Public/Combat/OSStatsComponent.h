@@ -17,7 +17,10 @@ class OBSIDIANSHRINE_API UOSStatsComponent : public UActorComponent
 public:
 	UOSStatsComponent();
 
+	/** Takes the limits and rates from Def and refills everything. */
 	void InitFromDef(const FOSCharacterDef& Def);
+	/** Takes the limits and rates from Def but keeps the current health, stamina and poise (clamped). */
+	void UpdateFromDef(const FOSCharacterDef& Def);
 	void RestoreAll();
 
 	void Advance(float DeltaTime);

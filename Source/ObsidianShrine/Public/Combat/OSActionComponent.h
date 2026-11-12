@@ -32,7 +32,7 @@ public:
 
 	/**
 	 * Player-style input. Starts the slot's action if idle or inside a Cancel window,
-	 * otherwise remembers it for BufferDuration seconds. Returns true if an action started now.
+	 * otherwise remembers it for Controls.InputBuffer seconds. Returns true if an action started now.
 	 */
 	bool RequestSlot(FName Slot);
 
@@ -56,8 +56,6 @@ public:
 
 	/** cm/s of the action's own displacement right now, 0 outside its move range. */
 	float GetMoveSpeedNow() const;
-
-	float BufferDuration = 0.4f;
 
 	FOSOnActionStarted OnActionStarted;
 	FOSOnActionEnded OnActionEnded;

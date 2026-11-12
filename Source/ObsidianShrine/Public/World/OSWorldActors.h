@@ -21,10 +21,18 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Obsidian")
 	FName CheckpointId;
 
+	/** How far in front of the shrine the player respawns, cm. Set by the level manifest. */
+	UPROPERTY(EditAnywhere, Category = "Obsidian")
+	float RespawnDistance = 0.f;
+
+	/** How far above the shrine the player respawns, cm. Set by the level manifest. */
+	UPROPERTY(EditAnywhere, Category = "Obsidian")
+	float RespawnHeight = 0.f;
+
 	/** Where the player stands after respawning: in front of the shrine, facing it. */
 	FTransform GetRespawnTransform() const;
 
-	virtual FString GetPrompt() const override { return TEXT("Rest at shrine"); }
+	virtual FString GetPrompt() const override;
 	virtual void Interact(AOSPlayerCharacter* Player) override;
 };
 
@@ -37,7 +45,7 @@ class OBSIDIANSHRINE_API AOSCurrencyPickup : public AOSInteractable
 public:
 	AOSCurrencyPickup();
 
-	virtual FString GetPrompt() const override { return TEXT("Recover lost shards"); }
+	virtual FString GetPrompt() const override;
 	virtual void Interact(AOSPlayerCharacter* Player) override;
 };
 

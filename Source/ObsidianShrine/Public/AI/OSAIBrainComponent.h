@@ -20,7 +20,8 @@ class OBSIDIANSHRINE_API UOSAIBrainComponent : public UActorComponent
 public:
 	UOSAIBrainComponent();
 
-	void SetProfile(const FOSAIProfileDef& InProfile);
+	/** bKeepState keeps the phase, cooldowns and target: the profile changed under a fight in progress. */
+	void SetProfile(const FOSAIProfileDef& InProfile, bool bKeepState = false);
 	const FOSAIProfileDef& GetProfile() const { return Profile; }
 
 	/** Non-null while the enemy is aggressive. */

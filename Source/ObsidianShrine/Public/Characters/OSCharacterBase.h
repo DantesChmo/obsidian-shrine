@@ -36,7 +36,11 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Obsidian")
 	EOSFaction Faction = EOSFaction::Enemy;
 
-	bool ApplyDefinition(FName InCharacterId);
+	/**
+	 * Rebuilds the character from its definition. bKeepState leaves health, stamina and the running action
+	 * alone, which is what a data reload wants; otherwise the character starts fresh.
+	 */
+	bool ApplyDefinition(FName InCharacterId, bool bKeepState = false);
 	const FOSCharacterDef& GetDefinition() const { return Definition; }
 
 	UOSStatsComponent* GetStats() const { return Stats; }
@@ -56,6 +60,7 @@ public:
 	FOSOnCharacterDied OnDied;
 
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void Tick(float DeltaTime) override;
 	virtual void FellOutOfWorld(const UDamageType& DamageType) override;
 
@@ -84,11 +89,11 @@ protected:
 	bool bWantsSprint = false;
 	bool bSprinting = false;
 
-	/** Degrees per second when turning towards the combat target. */
-	float TurnRate = 720.f;
-
 	/** Called once when health reaches zero, after the death action started. */
 	virtual void OnDeath() {}
+
+	/** The data was reloaded (os.ReloadData): take the new definition without resetting the character. */
+	virtual void HandleDataReloaded();
 
 private:
 	UPROPERTY(Transient)

@@ -7,7 +7,10 @@
 
 class AOSCharacterBase;
 
-/** Target lock for the player: picks a target, keeps the camera on it, drops it when it dies or gets too far. */
+/**
+ * Target lock for the player: picks a target, keeps the camera on it, drops it when it dies or gets too far.
+ * Distances, angles and camera behaviour come from the LockOn section of the game settings.
+ */
 UCLASS()
 class OBSIDIANSHRINE_API UOSLockOnComponent : public UActorComponent
 {
@@ -15,14 +18,6 @@ class OBSIDIANSHRINE_API UOSLockOnComponent : public UActorComponent
 
 public:
 	UOSLockOnComponent();
-
-	float AcquireDistance = 2200.f;
-	float BreakDistance = 2800.f;
-	/** Half-angle of the cone in front of the camera in which targets can be acquired, degrees. */
-	float AcquireAngle = 55.f;
-	float CameraInterpSpeed = 9.f;
-	/** The camera looks this many degrees below the line to the target. */
-	float CameraPitchOffset = -12.f;
 
 	AOSCharacterBase* GetTarget() const { return Target.Get(); }
 

@@ -5,6 +5,7 @@
 #include "Combat/OSLockOnComponent.h"
 #include "Combat/OSStatsComponent.h"
 #include "Core/OSProgress.h"
+#include "Data/OSDataSubsystem.h"
 #include "Engine/Canvas.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
@@ -51,6 +52,7 @@ void AOSHUD::DrawHUD()
 	const float Width = Canvas->ClipX;
 	const float Height = Canvas->ClipY;
 	UFont* Font = GEngine->GetMediumFont();
+	const FOSTextsDef& Texts = UOSDataSubsystem::Texts();
 
 	const AOSPlayerCharacter* Player = Cast<AOSPlayerCharacter>(GetOwningPawn());
 	if (Player)
@@ -60,13 +62,18 @@ void AOSHUD::DrawHUD()
 
 		if (const AOSInteractable* Interactable = Player->GetFocusedInteractable())
 		{
-			DrawCenteredText(FString::Printf(TEXT("[E / A]  %s"), *Interactable->GetPrompt()), Height * 0.72f, 1.4f, FLinearColor::White);
+			TMap<FString, FString> Values;
+			Values.Add(TEXT("Keys"), UOSDataSubsystem::DescribeKeys(UOSDataSubsystem::Bindings().Interact, Texts));
+			Values.Add(TEXT("Prompt"), Interactable->GetPrompt());
+			DrawCenteredText(UOSDataSubsystem::FormatText(Texts.InteractPrompt, Values), Height * 0.72f, 1.4f, FLinearColor::White);
 		}
 	}
 
 	if (const UOSProgressSubsystem* Progress = UOSProgressSubsystem::Get(this))
 	{
-		DrawText(FString::Printf(TEXT("Shards: %d"), Progress->State.Currency), FLinearColor::White, Width - 220.f, Height - 60.f, Font, 1.4f);
+		TMap<FString, FString> Values;
+		Values.Add(TEXT("Amount"), FString::FromInt(Progress->State.Currency));
+		DrawText(UOSDataSubsystem::FormatText(Texts.Currency, Values), FLinearColor::White, Width - 220.f, Height - 60.f, Font, 1.4f);
 	}
 
 	const AOSCharacterBase* LockTarget = Player ? Player->GetLockOn()->GetTarget() : nullptr;

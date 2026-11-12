@@ -16,12 +16,23 @@ void FOSProgressState::AddCurrency(int32 Amount)
 	Currency = FMath::Max(0, Currency + Amount);
 }
 
-void FOSProgressState::HandleDeath(const FVector& Location, const FString& Map)
+void FOSProgressState::HandleDeath(const FVector& Location, const FString& Map, const FOSDeathDef& Rules)
 {
-	DroppedCurrency = Currency;
-	DroppedLocation = Location;
-	DroppedMap = Map;
-	Currency = 0;
+	const float Fraction = FMath::Clamp(Rules.CurrencyLossFraction, 0.f, 1.f);
+	const int32 Lost = FMath::Clamp(FMath::RoundToInt(Currency * Fraction), 0, Currency);
+	const int32 Carried = Rules.bKeepPreviousDrop ? DroppedCurrency : 0;
+
+	Currency -= Lost;
+	DroppedCurrency = Lost + Carried;
+	if (DroppedCurrency > 0)
+	{
+		DroppedLocation = Location;
+		DroppedMap = Map;
+	}
+	else
+	{
+		DroppedMap.Reset();
+	}
 }
 
 int32 FOSProgressState::RecoverDropped()

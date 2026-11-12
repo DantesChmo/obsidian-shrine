@@ -135,7 +135,7 @@ void UOSActionComponent::Advance(float DeltaTime)
 	if (!BufferedSlot.IsNone())
 	{
 		BufferAge += DeltaTime;
-		if (BufferAge > BufferDuration)
+		if (BufferAge > UOSDataSubsystem::Settings().Controls.InputBuffer)
 		{
 			BufferedSlot = NAME_None;
 		}
