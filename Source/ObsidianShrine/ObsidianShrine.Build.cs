@@ -13,10 +13,8 @@ public class ObsidianShrine : ModuleRules
 			"Engine",
 			"InputCore",
 			"EnhancedInput",
-			"GameplayAbilities",
-			"GameplayTags",
-			"GameplayTasks",
-			"MotionWarping"
+			"Json",
+			"JsonUtilities"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[]

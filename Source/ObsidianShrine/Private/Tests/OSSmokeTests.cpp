@@ -13,9 +13,7 @@ bool FOSSmokeRequiredModulesTest::RunTest(const FString& Parameters)
 {
 	const FModuleManager& Modules = FModuleManager::Get();
 	TestTrue(TEXT("ObsidianShrine module loaded"), Modules.IsModuleLoaded(TEXT("ObsidianShrine")));
-	TestTrue(TEXT("GameplayAbilities module loaded"), Modules.IsModuleLoaded(TEXT("GameplayAbilities")));
 	TestTrue(TEXT("EnhancedInput module loaded"), Modules.IsModuleLoaded(TEXT("EnhancedInput")));
-	TestTrue(TEXT("MotionWarping module loaded"), Modules.IsModuleLoaded(TEXT("MotionWarping")));
 	return true;
 }
 
