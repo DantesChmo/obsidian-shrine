@@ -48,7 +48,9 @@ def _spawn_player_start(spawn):
 
 def _spawn_shrine(spawn):
     level_utils.spawn_checkpoint(
-        spawn["Id"], spawn["Label"], location=tuple(spawn["Location"]), rotation=tuple(spawn["Rotation"]))
+        spawn["Id"], spawn["Label"], location=tuple(spawn["Location"]), rotation=tuple(spawn["Rotation"]),
+        interact_radius=spawn["InteractRadius"], respawn_distance=spawn["RespawnDistance"],
+        respawn_height=spawn["RespawnHeight"])
 
 
 def _spawn_enemy(spawn):

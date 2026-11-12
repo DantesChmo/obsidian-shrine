@@ -8,6 +8,7 @@
       "MaxPoise": 120,
       "PoiseResetDelay": 6,
       "WalkSpeed": 300,
+      "TurnRate": 300,
       "Weapon": "warden_glaive",
       "AIProfile": "warden_ai",
       "CurrencyReward": 1500,
@@ -37,7 +38,6 @@
       "LeashRadius": 6000,
       "AttackDelayMin": 0.5,
       "AttackDelayMax": 1.2,
-      "TurnRate": 300,
       "Moves": [
         {
           "Action": "warden_sweep",

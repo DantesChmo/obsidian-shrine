@@ -27,7 +27,6 @@ void AOSEnemyCharacter::BeginPlay()
 	if (Profile)
 	{
 		Brain->SetProfile(*Profile);
-		TurnRate = Profile->TurnRate;
 	}
 	else
 	{

@@ -1,0 +1,42 @@
+{
+  "_generated": "from Game/game.yaml by Tools/build_data.py - edit the YAML, not this file",
+  "Game": {
+    "PlayerCharacter": "player",
+    "StartMap": "/Game/Maps/L_Sandbox",
+    "InteractRadius": 260,
+    "Camera": {
+      "ArmLength": 430,
+      "HeightOffset": 70,
+      "LagSpeed": 12,
+      "MouseSensitivity": 0.12,
+      "StickSpeed": 160,
+      "MinPitch": -65,
+      "MaxPitch": 55
+    },
+    "LockOn": {
+      "AcquireDistance": 2200,
+      "BreakDistance": 2800,
+      "AcquireAngle": 55,
+      "CameraSpeed": 9,
+      "CameraPitchOffset": -12,
+      "PivotHeight": 80,
+      "MinPitch": -50,
+      "MaxPitch": 30
+    },
+    "Controls": {
+      "InputBuffer": 0.4,
+      "DodgeTapTime": 0.25
+    },
+    "Death": {
+      "RespawnDelay": 3.5,
+      "KillHeight": -3000,
+      "CorpseLifetime": 6,
+      "CurrencyLossFraction": 1,
+      "bKeepPreviousDrop": false
+    },
+    "Messages": {
+      "BossDefeatedDuration": 4,
+      "RestedDuration": 2.5
+    }
+  }
+}

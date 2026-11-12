@@ -1,0 +1,31 @@
+{
+  "_generated": "from Game/texts.yaml by Tools/build_data.py - edit the YAML, not this file",
+  "Texts": {
+    "InteractPrompt": "[{Keys}]  {Prompt}",
+    "KeySeparator": " / ",
+    "PromptInteract": "Interact",
+    "PromptShrine": "Rest at shrine",
+    "PromptPickup": "Recover lost shards",
+    "Currency": "Shards: {Amount}",
+    "MessageDied": "YOU DIED",
+    "MessageBossDefeated": "ENEMY FELLED",
+    "MessageRested": "SHRINE KINDLED",
+    "KeyLabels": {
+      "Gamepad_FaceButton_Bottom": "A",
+      "Gamepad_FaceButton_Right": "B",
+      "Gamepad_FaceButton_Left": "X",
+      "Gamepad_FaceButton_Top": "Y",
+      "Gamepad_LeftShoulder": "LB",
+      "Gamepad_RightShoulder": "RB",
+      "Gamepad_LeftTrigger": "LT",
+      "Gamepad_RightTrigger": "RT",
+      "Gamepad_LeftThumbstick": "L3",
+      "Gamepad_RightThumbstick": "R3",
+      "SpaceBar": "Space",
+      "LeftShift": "Shift",
+      "LeftMouseButton": "LMB",
+      "RightMouseButton": "RMB",
+      "MiddleMouseButton": "MMB"
+    }
+  }
+}

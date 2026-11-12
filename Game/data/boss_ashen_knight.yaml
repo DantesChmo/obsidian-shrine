@@ -11,6 +11,7 @@ Characters:
     MaxPoise: 100
     PoiseResetDelay: 5
     WalkSpeed: 340
+    TurnRate: 400
     Weapon: ashen_greatsword
     AIProfile: ashen_knight_ai
     CurrencyReward: 3000
@@ -35,7 +36,6 @@ AIProfiles:
     LeashRadius: 6000
     AttackDelayMin: 0.4
     AttackDelayMax: 1.1
-    TurnRate: 400
     Moves:
       - { Action: knight_slash_1, MinRange: 0, MaxRange: 380, Weight: 3 }
       - { Action: knight_thrust, MinRange: 350, MaxRange: 800, Weight: 2, Cooldown: 4 }

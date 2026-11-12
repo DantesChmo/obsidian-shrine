@@ -1,0 +1,27 @@
+# Управление: какие клавиши и кнопки геймпада что делают.
+# У каждого действия — список; одна клавиша может делать только одно. Пустой список [] отключает действие.
+# Справочник всех полей и имена клавиш: Docs/REFERENCE.md
+
+MoveForward: [W]
+MoveBackward: [S]
+MoveLeft: [A]
+MoveRight: [D]
+MoveStick: [Gamepad_Left2D]
+
+LookMouse: [Mouse2D]
+LookStick: [Gamepad_Right2D]
+
+Light: [LeftMouseButton, Gamepad_RightShoulder]
+Heavy: [F, Gamepad_RightTrigger]
+Guard: [RightMouseButton, Gamepad_LeftShoulder]
+
+# На клавиатуре уклонение и бег — разные клавиши, на геймпаде — одна: коротко нажать или держать.
+Dodge: [SpaceBar]
+Sprint: [LeftShift]
+DodgeOrSprint: [Gamepad_FaceButton_Right]
+
+LockOn: [Q, MiddleMouseButton, Gamepad_RightThumbstick]
+TargetLeft: [MouseScrollDown, Gamepad_DPad_Left]
+TargetRight: [MouseScrollUp, Gamepad_DPad_Right]
+
+Interact: [E, Gamepad_FaceButton_Bottom]

@@ -8,6 +8,7 @@
       "MaxPoise": 100,
       "PoiseResetDelay": 5,
       "WalkSpeed": 340,
+      "TurnRate": 400,
       "Weapon": "ashen_greatsword",
       "AIProfile": "ashen_knight_ai",
       "CurrencyReward": 3000,
@@ -37,7 +38,6 @@
       "LeashRadius": 6000,
       "AttackDelayMin": 0.4,
       "AttackDelayMax": 1.1,
-      "TurnRate": 400,
       "Moves": [
         {
           "Action": "knight_slash_1",

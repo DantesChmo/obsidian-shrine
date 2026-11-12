@@ -1,0 +1,43 @@
+# Общие настройки игры: кем играем, откуда начинаем, камера, захват цели, правила смерти.
+# Справочник всех полей: Docs/REFERENCE.md
+
+PlayerCharacter: player
+StartMap: /Game/Maps/L_Sandbox
+
+# С какого расстояния можно отдохнуть у святилища или подобрать осколки.
+InteractRadius: 260
+
+Camera:
+  ArmLength: 430
+  HeightOffset: 70
+  LagSpeed: 12
+  MouseSensitivity: 0.12
+  StickSpeed: 160
+  MinPitch: -65
+  MaxPitch: 55
+
+LockOn:
+  AcquireDistance: 2200
+  BreakDistance: 2800
+  AcquireAngle: 55
+  CameraSpeed: 9
+  CameraPitchOffset: -12
+  PivotHeight: 80
+  MinPitch: -50
+  MaxPitch: 30
+
+Controls:
+  InputBuffer: 0.4
+  DodgeTapTime: 0.25
+
+Death:
+  RespawnDelay: 3.5
+  KillHeight: -3000
+  CorpseLifetime: 6
+  # Классические правила: на месте смерти остаётся всё, а не подобранное с прошлого раза сгорает.
+  CurrencyLossFraction: 1
+  KeepPreviousDrop: false
+
+Messages:
+  BossDefeatedDuration: 4
+  RestedDuration: 2.5

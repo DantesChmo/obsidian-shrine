@@ -180,6 +180,10 @@ struct FOSWeaponDef
 	UPROPERTY()
 	float GuardStaminaScale = 0.6f;
 
+	/** Full width in degrees of the frontal sector a guard covers; 360 guards all around. */
+	UPROPERTY()
+	float GuardAngle = 180.f;
+
 	/** Slot -> action id. */
 	UPROPERTY()
 	TMap<FName, FName> Actions;
@@ -230,6 +234,18 @@ struct FOSCharacterDef
 
 	UPROPERTY()
 	float SprintStaminaPerSecond = 12.f;
+
+	/** Degrees per second, both when turning to the movement direction and to the target. */
+	UPROPERTY()
+	float TurnRate = 720.f;
+
+	/** cm/s^2 when starting to move. */
+	UPROPERTY()
+	float Acceleration = 4096.f;
+
+	/** cm/s^2 when input stops. */
+	UPROPERTY()
+	float BrakingDeceleration = 4096.f;
 
 	UPROPERTY()
 	FName Weapon;
@@ -334,10 +350,6 @@ struct FOSAIProfileDef
 	UPROPERTY()
 	float AttackDelayMax = 1.5f;
 
-	/** Degrees per second. */
-	UPROPERTY()
-	float TurnRate = 360.f;
-
 	UPROPERTY()
 	TArray<FOSAIMoveDef> Moves;
 
@@ -346,7 +358,270 @@ struct FOSAIProfileDef
 	TArray<FOSAIPhaseDef> Phases;
 };
 
-/** Shape of one data file. Any file may contain any subset of the arrays. */
+/** Third-person camera of the player. */
+USTRUCT()
+struct FOSCameraDef
+{
+	GENERATED_BODY()
+
+	/** Distance from the player, cm. */
+	UPROPERTY()
+	float ArmLength = 430.f;
+
+	/** How far above the player's centre the camera sits, cm. */
+	UPROPERTY()
+	float HeightOffset = 70.f;
+
+	/** How quickly the camera catches up with the player; 0 disables the lag. */
+	UPROPERTY()
+	float LagSpeed = 12.f;
+
+	/** Degrees per mouse count. */
+	UPROPERTY()
+	float MouseSensitivity = 0.12f;
+
+	/** Degrees per second at full stick deflection. */
+	UPROPERTY()
+	float StickSpeed = 160.f;
+
+	UPROPERTY()
+	float MinPitch = -65.f;
+
+	UPROPERTY()
+	float MaxPitch = 55.f;
+};
+
+USTRUCT()
+struct FOSLockOnDef
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	float AcquireDistance = 2200.f;
+
+	UPROPERTY()
+	float BreakDistance = 2800.f;
+
+	/** Half-angle of the cone in front of the camera in which targets can be acquired, degrees. */
+	UPROPERTY()
+	float AcquireAngle = 55.f;
+
+	UPROPERTY()
+	float CameraSpeed = 9.f;
+
+	/** The camera looks this many degrees below the line to the target. */
+	UPROPERTY()
+	float CameraPitchOffset = -12.f;
+
+	/** The camera aims from this height above the player's centre, so close targets do not pitch it wildly. */
+	UPROPERTY()
+	float PivotHeight = 80.f;
+
+	UPROPERTY()
+	float MinPitch = -50.f;
+
+	UPROPERTY()
+	float MaxPitch = 30.f;
+};
+
+USTRUCT()
+struct FOSControlsDef
+{
+	GENERATED_BODY()
+
+	/** Seconds a button press is remembered while another action is running. */
+	UPROPERTY()
+	float InputBuffer = 0.4f;
+
+	/** Holding the dodge-or-sprint button longer than this sprints instead of dodging. */
+	UPROPERTY()
+	float DodgeTapTime = 0.25f;
+};
+
+USTRUCT()
+struct FOSDeathDef
+{
+	GENERATED_BODY()
+
+	/** Seconds between the player's death and the respawn. */
+	UPROPERTY()
+	float RespawnDelay = 3.5f;
+
+	/** Anything below this height is treated as a fall to death. */
+	UPROPERTY()
+	float KillHeight = -3000.f;
+
+	/** Seconds an enemy's corpse stays before it is removed. */
+	UPROPERTY()
+	float CorpseLifetime = 6.f;
+
+	/** Fraction of held currency left at the death spot; the rest stays with the player. */
+	UPROPERTY()
+	float CurrencyLossFraction = 1.f;
+
+	/** Currency still lying from an earlier death is added to the new drop instead of being lost. */
+	UPROPERTY()
+	bool bKeepPreviousDrop = false;
+};
+
+/** How long the centre-screen messages stay, seconds. The death message lasts until the respawn. */
+USTRUCT()
+struct FOSMessagesDef
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	float BossDefeatedDuration = 4.f;
+
+	UPROPERTY()
+	float RestedDuration = 2.5f;
+};
+
+/** Game-wide settings: Content/Data/game.json, section Game. */
+USTRUCT()
+struct FOSGameDef
+{
+	GENERATED_BODY()
+
+	/** Character definition the player is built from. */
+	UPROPERTY()
+	FName PlayerCharacter = TEXT("player");
+
+	/** Map the game opens with. The data compiler writes it to Config/DefaultEngine.ini. */
+	UPROPERTY()
+	FString StartMap = TEXT("/Game/Maps/L_Sandbox");
+
+	/** Distance at which the player can use a world object, unless the object sets its own. */
+	UPROPERTY()
+	float InteractRadius = 260.f;
+
+	UPROPERTY()
+	FOSCameraDef Camera;
+
+	UPROPERTY()
+	FOSLockOnDef LockOn;
+
+	UPROPERTY()
+	FOSControlsDef Controls;
+
+	UPROPERTY()
+	FOSDeathDef Death;
+
+	UPROPERTY()
+	FOSMessagesDef Messages;
+};
+
+/**
+ * Key bindings: Content/Data/input.json, section Input. Every field is one input action of the game and
+ * lists the engine key names (EKeys) bound to it.
+ */
+USTRUCT()
+struct FOSInputDef
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	TArray<FName> MoveForward;
+
+	UPROPERTY()
+	TArray<FName> MoveBackward;
+
+	UPROPERTY()
+	TArray<FName> MoveLeft;
+
+	UPROPERTY()
+	TArray<FName> MoveRight;
+
+	/** 2D axes. */
+	UPROPERTY()
+	TArray<FName> MoveStick;
+
+	/** 2D axes scaled by Camera.MouseSensitivity. */
+	UPROPERTY()
+	TArray<FName> LookMouse;
+
+	/** 2D axes scaled by Camera.StickSpeed. */
+	UPROPERTY()
+	TArray<FName> LookStick;
+
+	UPROPERTY()
+	TArray<FName> Light;
+
+	UPROPERTY()
+	TArray<FName> Heavy;
+
+	UPROPERTY()
+	TArray<FName> Guard;
+
+	/** Dodges on press. */
+	UPROPERTY()
+	TArray<FName> Dodge;
+
+	/** Sprints while held. */
+	UPROPERTY()
+	TArray<FName> Sprint;
+
+	/** Tap to dodge, hold to sprint. */
+	UPROPERTY()
+	TArray<FName> DodgeOrSprint;
+
+	UPROPERTY()
+	TArray<FName> LockOn;
+
+	UPROPERTY()
+	TArray<FName> TargetLeft;
+
+	UPROPERTY()
+	TArray<FName> TargetRight;
+
+	UPROPERTY()
+	TArray<FName> Interact;
+};
+
+/**
+ * Every text the game shows: Content/Data/texts.json, section Texts.
+ * {Name} placeholders are filled in by the game; a text may only use the placeholders its default uses.
+ */
+USTRUCT()
+struct FOSTextsDef
+{
+	GENERATED_BODY()
+
+	/** {Keys}: the keys bound to Interact; {Prompt}: what the object offers. */
+	UPROPERTY()
+	FString InteractPrompt = TEXT("[{Keys}]  {Prompt}");
+
+	/** Put between key names when an action has several keys. */
+	UPROPERTY()
+	FString KeySeparator = TEXT(" / ");
+
+	UPROPERTY()
+	FString PromptInteract = TEXT("Interact");
+
+	UPROPERTY()
+	FString PromptShrine = TEXT("Rest at shrine");
+
+	UPROPERTY()
+	FString PromptPickup = TEXT("Recover lost shards");
+
+	UPROPERTY()
+	FString Currency = TEXT("Shards: {Amount}");
+
+	UPROPERTY()
+	FString MessageDied = TEXT("YOU DIED");
+
+	UPROPERTY()
+	FString MessageBossDefeated = TEXT("ENEMY FELLED");
+
+	UPROPERTY()
+	FString MessageRested = TEXT("SHRINE KINDLED");
+
+	/** Engine key name -> how it is shown in prompts. Keys not listed are shown by their engine name. */
+	UPROPERTY()
+	TMap<FName, FString> KeyLabels;
+};
+
+/** Shape of one data file. Any file may contain any subset of the sections. */
 USTRUCT()
 struct FOSDataFile
 {
@@ -363,4 +638,14 @@ struct FOSDataFile
 
 	UPROPERTY()
 	TArray<FOSAIProfileDef> AIProfiles;
+
+	/** At most one file may contain each of the three sections below. */
+	UPROPERTY()
+	FOSGameDef Game;
+
+	UPROPERTY()
+	FOSInputDef Input;
+
+	UPROPERTY()
+	FOSTextsDef Texts;
 };

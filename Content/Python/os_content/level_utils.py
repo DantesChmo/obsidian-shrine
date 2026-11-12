@@ -84,9 +84,16 @@ def spawn_enemy(character_id, label, location, rotation=(0.0, 0.0, 0.0), persist
     return spawn_game_actor("OSEnemySpawner", label, location, rotation, properties)
 
 
-def spawn_checkpoint(checkpoint_id, label, location, rotation=(0.0, 0.0, 0.0)):
-    """Places a shrine. The player respawns 180 uu in front of it (its +X after rotation)."""
-    return spawn_game_actor("OSCheckpoint", label, location, rotation, {"checkpoint_id": checkpoint_id})
+def spawn_checkpoint(checkpoint_id, label, location, rotation=(0.0, 0.0, 0.0),
+                     interact_radius=0.0, respawn_distance=180.0, respawn_height=100.0):
+    """Places a shrine. The player respawns respawn_distance in front of it (its +X after rotation) and
+    respawn_height above it. interact_radius 0 means the game-wide radius from Game/game.yaml."""
+    return spawn_game_actor("OSCheckpoint", label, location, rotation, {
+        "checkpoint_id": checkpoint_id,
+        "interact_radius": float(interact_radius),
+        "respawn_distance": float(respawn_distance),
+        "respawn_height": float(respawn_height),
+    })
 
 
 def save_current_level():

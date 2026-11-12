@@ -8,6 +8,7 @@
       "MaxPoise": 30,
       "PoiseResetDelay": 4,
       "WalkSpeed": 260,
+      "TurnRate": 360,
       "Weapon": "husk_claws",
       "AIProfile": "husk_ai",
       "CurrencyReward": 40,
@@ -35,7 +36,6 @@
       "LeashRadius": 2500,
       "AttackDelayMin": 0.6,
       "AttackDelayMax": 1.5,
-      "TurnRate": 360,
       "Moves": [
         {
           "Action": "husk_slash",

@@ -1,0 +1,64 @@
+{
+  "_generated": "from Game/input.yaml by Tools/build_data.py - edit the YAML, not this file",
+  "Input": {
+    "MoveForward": [
+      "W"
+    ],
+    "MoveBackward": [
+      "S"
+    ],
+    "MoveLeft": [
+      "A"
+    ],
+    "MoveRight": [
+      "D"
+    ],
+    "MoveStick": [
+      "Gamepad_Left2D"
+    ],
+    "LookMouse": [
+      "Mouse2D"
+    ],
+    "LookStick": [
+      "Gamepad_Right2D"
+    ],
+    "Light": [
+      "LeftMouseButton",
+      "Gamepad_RightShoulder"
+    ],
+    "Heavy": [
+      "F",
+      "Gamepad_RightTrigger"
+    ],
+    "Guard": [
+      "RightMouseButton",
+      "Gamepad_LeftShoulder"
+    ],
+    "Dodge": [
+      "SpaceBar"
+    ],
+    "Sprint": [
+      "LeftShift"
+    ],
+    "DodgeOrSprint": [
+      "Gamepad_FaceButton_Right"
+    ],
+    "LockOn": [
+      "Q",
+      "MiddleMouseButton",
+      "Gamepad_RightThumbstick"
+    ],
+    "TargetLeft": [
+      "MouseScrollDown",
+      "Gamepad_DPad_Left"
+    ],
+    "TargetRight": [
+      "MouseScrollUp",
+      "Gamepad_DPad_Right"
+    ],
+    "Interact": [
+      "E",
+      "Gamepad_FaceButton_Bottom"
+    ]
+  }
+}

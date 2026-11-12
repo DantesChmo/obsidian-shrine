@@ -20,9 +20,34 @@ SECTIONS = [
 ]
 
 
+SETTINGS_SECTIONS = [
+    ("Настройки игры", "FOSGameDef", "`Game/game.yaml`",
+     "Общие настройки: кем играет игрок, с какой карты начинается игра, камера, захват цели, правила смерти."),
+    ("Камера", "FOSCameraDef", "раздел `Camera` в `Game/game.yaml`",
+     "Камера от третьего лица, пока цель не захвачена."),
+    ("Захват цели", "FOSLockOnDef", "раздел `LockOn` в `Game/game.yaml`",
+     "Когда цель можно захватить, когда захват срывается и как ведёт себя камера, пока он держится."),
+    ("Отклик управления", "FOSControlsDef", "раздел `Controls` в `Game/game.yaml`",
+     "Тайминги ввода."),
+    ("Смерть и возрождение", "FOSDeathDef", "раздел `Death` в `Game/game.yaml`",
+     "Что происходит, когда игрок или враг погибает."),
+    ("Сообщения", "FOSMessagesDef", "раздел `Messages` в `Game/game.yaml`",
+     "Сколько секунд держатся крупные надписи по центру экрана. Надпись о смерти висит до возрождения."),
+    ("Управление", "FOSInputDef", "`Game/input.yaml`",
+     "Какие клавиши и кнопки геймпада что делают. У каждого действия — список; пустой список `[]` отключает действие. "
+     "Одна клавиша — одно действие. Имена клавиш — как в движке: буквы `A`…`Z`, цифры `Zero`…`Nine`, `SpaceBar`, "
+     "`LeftShift`, `LeftMouseButton`, `MouseScrollUp`; геймпад — `Gamepad_FaceButton_Bottom` (A), `_Right` (B), "
+     "`_Left` (X), `_Top` (Y), `Gamepad_LeftShoulder` (LB), `Gamepad_RightTrigger` (RT), `Gamepad_RightThumbstick` "
+     "(R3), `Gamepad_DPad_Left`. Полный список — `Tools/osdata/keys.py`; опечатку компилятор покажет и подскажет."),
+    ("Тексты", "FOSTextsDef", "`Game/texts.yaml`",
+     "Все надписи, которые видит игрок. В фигурных скобках — места, куда игра подставляет значение; "
+     "использовать можно только те, что есть в тексте по умолчанию."),
+]
+
+
 def all_sections():
     from . import levels
-    return SECTIONS + levels.REFERENCE_SECTIONS
+    return SECTIONS + levels.REFERENCE_SECTIONS + SETTINGS_SECTIONS
 
 
 SLOT_NOTES = [
@@ -51,6 +76,8 @@ def _format_default(field):
         return "true" if field.default else "false"
     if kind == "float":
         return "{:g}".format(field.default)
+    if kind == "string":
+        return "`{}`".format(field.default.replace(" ", "\u00a0"))
     return str(field.default)
 
 
@@ -66,7 +93,7 @@ def _format_type(field, schema):
         if t.kind == "array":
             return "список: {}".format(one(t.item))
         if t.kind == "map":
-            return "слот → {}".format(one(t.item))
+            return "{} → {}".format("слот" if field.name == "Actions" else "имя", one(t.item))
         return names[t.kind]
 
     return one(type_)

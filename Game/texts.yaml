@@ -1,0 +1,35 @@
+# Все надписи, которые видит игрок.
+# В фигурных скобках — места, куда игра подставит значение: {Keys}, {Prompt}, {Amount}.
+# Справочник всех полей: Docs/REFERENCE.md
+
+# Подсказка у объекта: клавиши берутся из действия Interact в Game/input.yaml.
+InteractPrompt: "[{Keys}]  {Prompt}"
+KeySeparator: " / "
+
+PromptInteract: Interact
+PromptShrine: Rest at shrine
+PromptPickup: Recover lost shards
+
+Currency: "Shards: {Amount}"
+
+MessageDied: YOU DIED
+MessageBossDefeated: ENEMY FELLED
+MessageRested: SHRINE KINDLED
+
+# Как называть клавиши в подсказках. Не указанные показываются именем из движка (E, Q, F).
+KeyLabels:
+  Gamepad_FaceButton_Bottom: A
+  Gamepad_FaceButton_Right: B
+  Gamepad_FaceButton_Left: X
+  Gamepad_FaceButton_Top: "Y"
+  Gamepad_LeftShoulder: LB
+  Gamepad_RightShoulder: RB
+  Gamepad_LeftTrigger: LT
+  Gamepad_RightTrigger: RT
+  Gamepad_LeftThumbstick: L3
+  Gamepad_RightThumbstick: R3
+  SpaceBar: Space
+  LeftShift: Shift
+  LeftMouseButton: LMB
+  RightMouseButton: RMB
+  MiddleMouseButton: MMB

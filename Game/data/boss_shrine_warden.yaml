@@ -8,6 +8,7 @@ Characters:
     MaxPoise: 120
     PoiseResetDelay: 6
     WalkSpeed: 300
+    TurnRate: 300
     Weapon: warden_glaive
     AIProfile: warden_ai
     CurrencyReward: 1500
@@ -32,7 +33,6 @@ AIProfiles:
     LeashRadius: 6000
     AttackDelayMin: 0.5
     AttackDelayMax: 1.2
-    TurnRate: 300
     Moves:
       - { Action: warden_sweep, MinRange: 0, MaxRange: 420, Weight: 3 }
       - { Action: warden_overhead, MinRange: 0, MaxRange: 460, Weight: 2, Cooldown: 3 }

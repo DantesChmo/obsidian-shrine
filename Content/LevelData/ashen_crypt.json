@@ -338,7 +338,10 @@
         0,
         0,
         0
-      ]
+      ],
+      "InteractRadius": 0.0,
+      "RespawnDistance": 180.0,
+      "RespawnHeight": 100.0
     },
     {
       "Kind": "Shrine",
@@ -353,7 +356,10 @@
         0,
         180,
         0
-      ]
+      ],
+      "InteractRadius": 0.0,
+      "RespawnDistance": 180.0,
+      "RespawnHeight": 100.0
     },
     {
       "Kind": "Enemy",

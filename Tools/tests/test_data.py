@@ -34,8 +34,8 @@ class SchemaFromHeader(unittest.TestCase):
         self.assertNotIn("bSnapFacing", self.schema.structs["FOSActionDef"].fields)
 
     def test_every_section_of_a_data_file_is_known(self):
-        from osdata import rules
-        self.assertEqual(set(self.schema.structs["FOSDataFile"].fields), set(rules.SECTIONS))
+        from osdata import rules, settings
+        self.assertEqual(set(self.schema.structs["FOSDataFile"].fields), set(rules.SECTIONS) | set(settings.SECTIONS))
 
 
 class YamlPitfalls(ProjectCase):

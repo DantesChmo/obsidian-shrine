@@ -156,8 +156,10 @@ class Recorder:
     def spawn_enemy(self, character_id, label, location, rotation=(0.0, 0.0, 0.0), persistent_id=None):
         return self._record("enemy", character_id, label, tuple(location), tuple(rotation), persistent_id)
 
-    def spawn_checkpoint(self, checkpoint_id, label, location, rotation=(0.0, 0.0, 0.0)):
-        return self._record("shrine", checkpoint_id, label, tuple(location), tuple(rotation))
+    def spawn_checkpoint(self, checkpoint_id, label, location, rotation=(0.0, 0.0, 0.0),
+                         interact_radius=0.0, respawn_distance=180.0, respawn_height=100.0):
+        return self._record("shrine", checkpoint_id, label, tuple(location), tuple(rotation),
+                            interact_radius, respawn_distance, respawn_height)
 
     def follow_ups(self):
         """What the builder did to each spawned actor afterwards (mobility, light settings)."""

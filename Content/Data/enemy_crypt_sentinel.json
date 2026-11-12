@@ -8,6 +8,7 @@
       "MaxPoise": 80,
       "PoiseResetDelay": 5,
       "WalkSpeed": 200,
+      "TurnRate": 220,
       "Weapon": "sentinel_mace",
       "AIProfile": "sentinel_ai",
       "CurrencyReward": 120,
@@ -36,7 +37,6 @@
       "LeashRadius": 2200,
       "AttackDelayMin": 0.9,
       "AttackDelayMax": 1.8,
-      "TurnRate": 220,
       "Moves": [
         {
           "Action": "sentinel_smash",

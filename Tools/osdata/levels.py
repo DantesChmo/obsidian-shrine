@@ -42,6 +42,9 @@ STRUCTS = [
             Field("Id", _NAME, required=True),
             Field("At", _VECTOR, required=True),
             Field("Yaw", _FLOAT, default=0.0),
+            Field("InteractRadius", _FLOAT, default=0.0),
+            Field("RespawnDistance", _FLOAT, default=180.0),
+            Field("RespawnHeight", _FLOAT, default=100.0),
             Field("Name", _NAME)),
     _struct("LevelEnemy",
             Field("Character", _NAME, required=True),
@@ -57,6 +60,8 @@ STRUCTS = [
             Field("Shrines", Type("array", item=Type("struct", ref="LevelShrine"))),
             Field("Enemies", Type("array", item=Type("struct", ref="LevelEnemy")))),
 ]
+
+STRUCTS_BY_NAME = {struct.name: struct for struct in STRUCTS}
 
 # (heading, struct, where it is written, intro) - appended to the generated reference
 REFERENCE_SECTIONS = [
@@ -175,6 +180,7 @@ def _resolve(level, source, path, presets, characters, seen, problems):
         add({"Kind": "PlayerStart", "Label": "PlayerStart", "Location": start["At"],
              "Rotation": _rotation(start.get("Yaw", 0))}, source.line_of("PlayerStart"))
 
+    shrine_defaults = {field.name: field.default for field in STRUCTS_BY_NAME["LevelShrine"].fields.values()}
     shrines = source.get("Shrines") if isinstance(source.get("Shrines"), LSeq) else None
     for index, shrine in enumerate(level.get("Shrines", [])):
         line = shrines.line_of(index)
@@ -182,7 +188,10 @@ def _resolve(level, source, path, presets, characters, seen, problems):
             continue
         claim("shrine", shrine["Id"], line)
         add({"Kind": "Shrine", "Label": shrine.get("Name", "Shrine_{}".format(shrine["Id"])), "Id": shrine["Id"],
-             "Location": shrine["At"], "Rotation": _rotation(shrine.get("Yaw", 0))}, line)
+             "Location": shrine["At"], "Rotation": _rotation(shrine.get("Yaw", 0)),
+             "InteractRadius": shrine.get("InteractRadius", shrine_defaults["InteractRadius"]),
+             "RespawnDistance": shrine.get("RespawnDistance", shrine_defaults["RespawnDistance"]),
+             "RespawnHeight": shrine.get("RespawnHeight", shrine_defaults["RespawnHeight"])}, line)
 
     enemies = source.get("Enemies") if isinstance(source.get("Enemies"), LSeq) else None
     for index, enemy in enumerate(level.get("Enemies", [])):

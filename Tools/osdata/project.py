@@ -2,6 +2,9 @@
 
     Game/data/**/*.yaml      -> Content/Data/**/*.json        gameplay definitions (engine, at runtime)
     Game/levels/*.yaml       -> Content/LevelData/*.json      resolved spawn lists (level builder, in the editor)
+    Game/game.yaml, input.yaml, texts.yaml
+                             -> Content/Data/<name>.json      settings, key bindings, texts (engine, at runtime)
+                             -> Config/DefaultEngine.ini      only the two default-map lines, from Game.StartMap
     Game/schema/fields.yaml                                   descriptions and ranges of every field
                              -> Docs/REFERENCE.md             generated field reference
 
@@ -11,7 +14,7 @@ Generated files are committed, so the game runs from a fresh checkout. `check` f
 import json
 import os
 
-from . import levels, reference, rules, schema as schema_module
+from . import levels, reference, rules, schema as schema_module, settings
 from .shape import ShapeChecker
 from .source import LMap, LSeq, Problem, SourceError, load_file
 
@@ -33,6 +36,7 @@ class Build:
         self.problems = []
         self.outputs = {}       # project-relative path -> text
         self.registry = rules.Registry()
+        self.settings = {}      # section -> settings.Manifest, for the game-wide manifests that exist
         self.schema = None
 
     @property
@@ -61,6 +65,7 @@ def load_schema(root, problems):
     with open(os.path.join(root, HEADER_PATH), "r", encoding="utf-8") as handle:
         schema = schema_module.parse_cpp_header(handle.read())
     levels.add_to_schema(schema)
+    settings.add_to_schema(schema)
 
     for field in schema.structs["FOSActionDef"].fields.values():
         field.required = field.name in ("Id", "Duration")
@@ -146,10 +151,15 @@ def run(root):
     build = Build()
     build.schema = load_schema(root, build.problems)
     _build_data(root, build)
+    settings.build(root, build, ShapeChecker(build.schema, build.problems), _to_json)
 
-    for path, payload in levels.build(root, _yaml_files(root, LEVEL_SOURCES), build).items():
+    resolved_levels = levels.build(root, _yaml_files(root, LEVEL_SOURCES), build)
+    for path, payload in resolved_levels.items():
         name = os.path.splitext(os.path.basename(path))[0]
         build.outputs["{}/{}.json".format(LEVEL_OUTPUT, name)] = _to_json(payload, path)
+
+    settings.check(build, {payload["Map"] for payload in resolved_levels.values()})
+    settings.write_engine_config(root, build)
 
     build.outputs[REFERENCE_PATH] = reference.render(build.schema)
     build.problems.sort(key=lambda problem: (problem.file, problem.line))
