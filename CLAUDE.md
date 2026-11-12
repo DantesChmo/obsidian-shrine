@@ -13,8 +13,9 @@ Souls-like action RPG tech demo. Unreal Engine 5 (C++), target platform Win64 on
 ## Rules
 
 - No Blueprints and no hand-edited binary assets. Gameplay is C++; every asset and level is produced by Python scripts in
-  `Content/Python` (entry: `build_content.py`), so `Content/` can be rebuilt from text. The only accepted exception is
-  Animation Blueprints if a C++/script-only route proves impossible — decide explicitly, do not drift into it.
+  `Content/Python` (entry: `build_content.py`), so `Content/` can be rebuilt from text. Decided in stage 3: no
+  Animation Blueprints either — meshes play one animation at a time in single-node mode from the character's
+  animation set.
 - Game content is authored as YAML manifests in `Game/` (definitions in `Game/data`, levels in `Game/levels`,
   settings / key bindings / texts in `Game/game.yaml`, `input.yaml`, `texts.yaml`) and
   compiled by `python3 Tools/build_data.py` into `Content/Data` and `Content/LevelData`. Never edit the generated
@@ -45,8 +46,12 @@ Souls-like action RPG tech demo. Unreal Engine 5 (C++), target platform Win64 on
   `Config/DefaultEngine.ini`, `keys` valid key names, `reference` docs). Vendored PyYAML in `Tools/vendor`;
   keep the tools on Python 3.11 syntax (the engine's bundled Python runs them on Windows).
 - An action is a timeline of windows (Hit, Invulnerable, Guard, PerfectGuard, HyperArmor, Cancel) run by
-  `UOSActionComponent`; gameplay timing comes from data, never from animation notifies. Animations are optional
-  and are stretched to the action's duration.
+  `UOSActionComponent`; gameplay timing comes from data, never from animation notifies. Animations are optional,
+  come from the character's animation set (`AnimationSets`) and are stretched to the action's duration.
+- Data never holds asset paths: asset fields (marked `asset:` in `Game/schema/fields.yaml`) take logical names from
+  `Game/assets.yaml`, which the compiler turns into object paths and lists in `Content/AssetData/cook.json`.
+  Exact paths inside imported packs come from `Docs/ASSET_INVENTORY.md`, written by the content pipeline on Windows.
+- Presentation (sound, effect, camera shake, hit-stop) is `Cosmetics` data played by `UOSCosmeticsComponent`.
 - `UOSStatsComponent`, `UOSActionComponent`, `UOSCombatComponent` expose `Advance()`/pure functions and work without
   an actor or world; test them that way (`Private/Tests/OSTestHelpers.h`). Use a real world only for scene queries.
 - `AOSCharacterBase` is fully defined by `CharacterId`; `AOSEnemyCharacter` + `UOSAIBrainComponent` cover regular
