@@ -1,141 +1,218 @@
 {
-	"Characters": [
-		{
-			"Id": "shrine_warden",
-			"DisplayName": "Shrine Warden",
-			"MaxHealth": 600,
-			"MaxPoise": 120,
-			"PoiseResetDelay": 6,
-			"WalkSpeed": 300,
-			"Weapon": "warden_glaive",
-			"AIProfile": "warden_ai",
-			"CurrencyReward": 1500,
-			"bBoss": true,
-			"Scale": 1.6,
-			"PlaceholderColor": "#7A3FB8",
-			"Actions": {
-				"Stagger": "react_stagger_heavy",
-				"Parried": "react_parried",
-				"Death": "react_death"
-			}
-		}
-	],
-	"Weapons": [
-		{
-			"Id": "warden_glaive",
-			"Damage": 34,
-			"PoiseDamage": 60,
-			"Reach": 200,
-			"Radius": 70
-		}
-	],
-	"AIProfiles": [
-		{
-			"Id": "warden_ai",
-			"AggroRadius": 2000,
-			"LeashRadius": 6000,
-			"AttackDelayMin": 0.5,
-			"AttackDelayMax": 1.2,
-			"TurnRate": 300,
-			"Moves": [
-				{ "Action": "warden_sweep", "MinRange": 0, "MaxRange": 420, "Weight": 3 },
-				{ "Action": "warden_overhead", "MinRange": 0, "MaxRange": 460, "Weight": 2, "Cooldown": 3 },
-				{ "Action": "warden_charge", "MinRange": 600, "MaxRange": 1600, "Weight": 2, "Cooldown": 6 },
-				{ "Action": "warden_flurry_1", "MinRange": 0, "MaxRange": 420, "Weight": 3, "Cooldown": 5, "MinPhase": 1 }
-			],
-			"Phases": [
-				{ "HealthBelow": 0.5, "EnterAction": "warden_roar" }
-			]
-		}
-	],
-	"Actions": [
-		{
-			"Id": "warden_sweep",
-			"Duration": 1.6,
-			"bSnapFacing": true,
-			"TrackingEnd": 0.5,
-			"MoveDistance": 120,
-			"MoveStart": 0.5,
-			"MoveEnd": 0.8,
-			"Windows": [
-				{ "Type": "HyperArmor", "Start": 0.0, "End": 0.95 },
-				{ "Type": "Hit", "Start": 0.7, "End": 0.95 }
-			]
-		},
-		{
-			"Id": "warden_overhead",
-			"Duration": 2.0,
-			"bSnapFacing": true,
-			"TrackingEnd": 0.8,
-			"DamageScale": 1.8,
-			"PoiseDamageScale": 2.0,
-			"Windows": [
-				{ "Type": "HyperArmor", "Start": 0.0, "End": 1.2 },
-				{ "Type": "Hit", "Start": 1.0, "End": 1.2 }
-			]
-		},
-		{
-			"Id": "warden_charge",
-			"Duration": 2.2,
-			"bSnapFacing": true,
-			"TrackingEnd": 0.75,
-			"DamageScale": 1.4,
-			"bUnblockable": true,
-			"MoveDistance": 1000,
-			"MoveStart": 0.8,
-			"MoveEnd": 1.4,
-			"Windows": [
-				{ "Type": "HyperArmor", "Start": 0.0, "End": 1.4 },
-				{ "Type": "Hit", "Start": 0.9, "End": 1.4 }
-			]
-		},
-		{
-			"Id": "warden_roar",
-			"Duration": 1.8,
-			"Windows": [
-				{ "Type": "Invulnerable", "Start": 0.0 }
-			]
-		},
-		{
-			"Id": "warden_flurry_1",
-			"Duration": 0.8,
-			"bSnapFacing": true,
-			"TrackingEnd": 0.3,
-			"AutoNext": "warden_flurry_2",
-			"MoveDistance": 100,
-			"MoveStart": 0.25,
-			"MoveEnd": 0.5,
-			"Windows": [
-				{ "Type": "HyperArmor", "Start": 0.0 },
-				{ "Type": "Hit", "Start": 0.4, "End": 0.55 }
-			]
-		},
-		{
-			"Id": "warden_flurry_2",
-			"Duration": 0.8,
-			"TrackingEnd": 0.3,
-			"AutoNext": "warden_flurry_3",
-			"MoveDistance": 100,
-			"MoveStart": 0.25,
-			"MoveEnd": 0.5,
-			"Windows": [
-				{ "Type": "HyperArmor", "Start": 0.0 },
-				{ "Type": "Hit", "Start": 0.4, "End": 0.55 }
-			]
-		},
-		{
-			"Id": "warden_flurry_3",
-			"Duration": 1.7,
-			"TrackingEnd": 0.45,
-			"DamageScale": 1.5,
-			"PoiseDamageScale": 1.5,
-			"MoveDistance": 160,
-			"MoveStart": 0.4,
-			"MoveEnd": 0.7,
-			"Windows": [
-				{ "Type": "HyperArmor", "Start": 0.0, "End": 0.85 },
-				{ "Type": "Hit", "Start": 0.65, "End": 0.85 }
-			]
-		}
-	]
+  "_generated": "from Game/data/boss_shrine_warden.yaml by Tools/build_data.py - edit the YAML, not this file",
+  "Characters": [
+    {
+      "Id": "shrine_warden",
+      "DisplayName": "Shrine Warden",
+      "MaxHealth": 600,
+      "MaxPoise": 120,
+      "PoiseResetDelay": 6,
+      "WalkSpeed": 300,
+      "Weapon": "warden_glaive",
+      "AIProfile": "warden_ai",
+      "CurrencyReward": 1500,
+      "bBoss": true,
+      "Scale": 1.6,
+      "PlaceholderColor": "#7A3FB8",
+      "Actions": {
+        "Stagger": "react_stagger_heavy",
+        "Parried": "react_parried",
+        "Death": "react_death"
+      }
+    }
+  ],
+  "Weapons": [
+    {
+      "Id": "warden_glaive",
+      "Damage": 34,
+      "PoiseDamage": 60,
+      "Reach": 200,
+      "Radius": 70
+    }
+  ],
+  "AIProfiles": [
+    {
+      "Id": "warden_ai",
+      "AggroRadius": 2000,
+      "LeashRadius": 6000,
+      "AttackDelayMin": 0.5,
+      "AttackDelayMax": 1.2,
+      "TurnRate": 300,
+      "Moves": [
+        {
+          "Action": "warden_sweep",
+          "MinRange": 0,
+          "MaxRange": 420,
+          "Weight": 3
+        },
+        {
+          "Action": "warden_overhead",
+          "MinRange": 0,
+          "MaxRange": 460,
+          "Weight": 2,
+          "Cooldown": 3
+        },
+        {
+          "Action": "warden_charge",
+          "MinRange": 600,
+          "MaxRange": 1600,
+          "Weight": 2,
+          "Cooldown": 6
+        },
+        {
+          "Action": "warden_flurry_1",
+          "MinRange": 0,
+          "MaxRange": 420,
+          "Weight": 3,
+          "Cooldown": 5,
+          "MinPhase": 1
+        }
+      ],
+      "Phases": [
+        {
+          "HealthBelow": 0.5,
+          "EnterAction": "warden_roar"
+        }
+      ]
+    }
+  ],
+  "Actions": [
+    {
+      "Id": "warden_sweep",
+      "Duration": 1.6,
+      "bSnapFacing": true,
+      "TrackingEnd": 0.5,
+      "MoveDistance": 120,
+      "MoveStart": 0.5,
+      "MoveEnd": 0.8,
+      "Windows": [
+        {
+          "Type": "HyperArmor",
+          "Start": 0.0,
+          "End": 0.95
+        },
+        {
+          "Type": "Hit",
+          "Start": 0.7,
+          "End": 0.95
+        }
+      ]
+    },
+    {
+      "Id": "warden_overhead",
+      "Duration": 2.0,
+      "bSnapFacing": true,
+      "TrackingEnd": 0.8,
+      "DamageScale": 1.8,
+      "PoiseDamageScale": 2.0,
+      "Windows": [
+        {
+          "Type": "HyperArmor",
+          "Start": 0.0,
+          "End": 1.2
+        },
+        {
+          "Type": "Hit",
+          "Start": 1.0,
+          "End": 1.2
+        }
+      ]
+    },
+    {
+      "Id": "warden_charge",
+      "Duration": 2.2,
+      "bSnapFacing": true,
+      "TrackingEnd": 0.75,
+      "DamageScale": 1.4,
+      "bUnblockable": true,
+      "MoveDistance": 1000,
+      "MoveStart": 0.8,
+      "MoveEnd": 1.4,
+      "Windows": [
+        {
+          "Type": "HyperArmor",
+          "Start": 0.0,
+          "End": 1.4
+        },
+        {
+          "Type": "Hit",
+          "Start": 0.9,
+          "End": 1.4
+        }
+      ]
+    },
+    {
+      "Id": "warden_roar",
+      "Duration": 1.8,
+      "Windows": [
+        {
+          "Type": "Invulnerable",
+          "Start": 0.0
+        }
+      ]
+    },
+    {
+      "Id": "warden_flurry_1",
+      "Duration": 0.8,
+      "bSnapFacing": true,
+      "TrackingEnd": 0.3,
+      "AutoNext": "warden_flurry_2",
+      "MoveDistance": 100,
+      "MoveStart": 0.25,
+      "MoveEnd": 0.5,
+      "Windows": [
+        {
+          "Type": "HyperArmor",
+          "Start": 0.0
+        },
+        {
+          "Type": "Hit",
+          "Start": 0.4,
+          "End": 0.55
+        }
+      ]
+    },
+    {
+      "Id": "warden_flurry_2",
+      "Duration": 0.8,
+      "TrackingEnd": 0.3,
+      "AutoNext": "warden_flurry_3",
+      "MoveDistance": 100,
+      "MoveStart": 0.25,
+      "MoveEnd": 0.5,
+      "Windows": [
+        {
+          "Type": "HyperArmor",
+          "Start": 0.0
+        },
+        {
+          "Type": "Hit",
+          "Start": 0.4,
+          "End": 0.55
+        }
+      ]
+    },
+    {
+      "Id": "warden_flurry_3",
+      "Duration": 1.7,
+      "TrackingEnd": 0.45,
+      "DamageScale": 1.5,
+      "PoiseDamageScale": 1.5,
+      "MoveDistance": 160,
+      "MoveStart": 0.4,
+      "MoveEnd": 0.7,
+      "Windows": [
+        {
+          "Type": "HyperArmor",
+          "Start": 0.0,
+          "End": 0.85
+        },
+        {
+          "Type": "Hit",
+          "Start": 0.65,
+          "End": 0.85
+        }
+      ]
+    }
+  ]
 }

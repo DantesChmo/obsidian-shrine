@@ -1,24 +1,25 @@
 {
-	"Actions": [
-		{
-			"Id": "react_stagger",
-			"Duration": 0.6
-		},
-		{
-			"Id": "react_stagger_heavy",
-			"Duration": 1.1
-		},
-		{
-			"Id": "react_guard_break",
-			"Duration": 1.3
-		},
-		{
-			"Id": "react_parried",
-			"Duration": 1.5
-		},
-		{
-			"Id": "react_death",
-			"Duration": 2.0
-		}
-	]
+  "_generated": "from Game/data/common.yaml by Tools/build_data.py - edit the YAML, not this file",
+  "Actions": [
+    {
+      "Id": "react_stagger",
+      "Duration": 0.6
+    },
+    {
+      "Id": "react_stagger_heavy",
+      "Duration": 1.1
+    },
+    {
+      "Id": "react_guard_break",
+      "Duration": 1.3
+    },
+    {
+      "Id": "react_parried",
+      "Duration": 1.5
+    },
+    {
+      "Id": "react_death",
+      "Duration": 2.0
+    }
+  ]
 }
