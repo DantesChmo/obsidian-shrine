@@ -2,6 +2,8 @@
 
     Game/data/**/*.yaml      -> Content/Data/**/*.json        gameplay definitions (engine, at runtime)
     Game/levels/*.yaml       -> Content/LevelData/*.json      resolved spawn lists (level builder, in the editor)
+    Game/assets.yaml         -> Content/AssetData/cook.json   logical asset names; asset fields of the data
+                                                              are written as object paths
     Game/game.yaml, input.yaml, texts.yaml
                              -> Content/Data/<name>.json      settings, key bindings, texts (engine, at runtime)
                              -> Config/DefaultEngine.ini      only the two default-map lines, from Game.StartMap
@@ -14,7 +16,7 @@ Generated files are committed, so the game runs from a fresh checkout. `check` f
 import json
 import os
 
-from . import levels, reference, rules, schema as schema_module, settings
+from . import assets, levels, reference, rules, schema as schema_module, settings
 from .shape import ShapeChecker
 from .source import LMap, LSeq, Problem, SourceError, load_file
 
@@ -38,6 +40,7 @@ class Build:
         self.registry = rules.Registry()
         self.settings = {}      # section -> settings.Manifest, for the game-wide manifests that exist
         self.schema = None
+        self.assets = None      # assets.AssetTable
 
     @property
     def ok(self):
@@ -66,6 +69,7 @@ def load_schema(root, problems):
         schema = schema_module.parse_cpp_header(handle.read())
     levels.add_to_schema(schema)
     settings.add_to_schema(schema)
+    assets.add_to_schema(schema)
 
     for field in schema.structs["FOSActionDef"].fields.values():
         field.required = field.name in ("Id", "Duration")
@@ -90,9 +94,15 @@ def load_schema(root, problems):
             if field is None:
                 problems.append(Problem(FIELDS_PATH, line, "{} has no field '{}'".format(struct_name, field_name)))
                 continue
-            if not isinstance(note, LMap) or set(note) - {"doc", "min", "max"}:
-                problems.append(Problem(FIELDS_PATH, line, "{}.{} must have only doc, min, max".format(struct_name, field_name)))
+            if not isinstance(note, LMap) or set(note) - {"doc", "min", "max", "asset"}:
+                problems.append(Problem(FIELDS_PATH, line, "{}.{} must have only doc, min, max, asset".format(struct_name, field_name)))
                 continue
+            if "asset" in note:
+                if note["asset"] not in assets.TYPES:
+                    problems.append(Problem(FIELDS_PATH, line, "{}.{}: asset must be one of {}".format(
+                        struct_name, field_name, ", ".join(assets.TYPES))))
+                    continue
+                field.asset = note["asset"]
             if isinstance(note.get("doc"), str):
                 field.doc = note["doc"].strip()
             field.minimum = note.get("min")
@@ -108,7 +118,7 @@ def load_schema(root, problems):
 
 
 def _build_data(root, build):
-    checker = ShapeChecker(build.schema, build.problems)
+    checker = ShapeChecker(build.schema, build.problems, build.assets)
     for path in _yaml_files(root, DATA_SOURCES):
         try:
             document = load_file(os.path.join(root, path), path)
@@ -150,8 +160,9 @@ def run(root):
     """Validates everything and computes the generated files. Writes nothing."""
     build = Build()
     build.schema = load_schema(root, build.problems)
+    build.assets = assets.load(root, ShapeChecker(build.schema, build.problems), build.problems)
     _build_data(root, build)
-    settings.build(root, build, ShapeChecker(build.schema, build.problems), _to_json)
+    settings.build(root, build, ShapeChecker(build.schema, build.problems, build.assets), _to_json)
 
     resolved_levels = levels.build(root, _yaml_files(root, LEVEL_SOURCES), build)
     for path, payload in resolved_levels.items():
@@ -161,6 +172,7 @@ def run(root):
     settings.check(build, {payload["Map"] for payload in resolved_levels.values()})
     settings.write_engine_config(root, build)
 
+    build.outputs[assets.COOK_LIST_PATH] = _to_json({"Assets": build.assets.cook_list()}, assets.ASSETS_PATH)
     build.outputs[REFERENCE_PATH] = reference.render(build.schema)
     build.problems.sort(key=lambda problem: (problem.file, problem.line))
     return build

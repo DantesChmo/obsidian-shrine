@@ -37,6 +37,7 @@ class Field:
         self.required = required
         self.minimum = None
         self.maximum = None
+        self.asset = None   # asset type (Tools/osdata/assets.py) when the field holds a logical asset name
 
 
 class Struct:

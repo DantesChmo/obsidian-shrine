@@ -46,8 +46,8 @@ SETTINGS_SECTIONS = [
 
 
 def all_sections():
-    from . import levels
-    return SECTIONS + levels.REFERENCE_SECTIONS + SETTINGS_SECTIONS
+    from . import assets, levels
+    return SECTIONS + levels.REFERENCE_SECTIONS + SETTINGS_SECTIONS + assets.REFERENCE_SECTIONS
 
 
 SLOT_NOTES = [
@@ -94,6 +94,8 @@ def _format_type(field, schema):
             return "список: {}".format(one(t.item))
         if t.kind == "map":
             return "{} → {}".format("слот" if field.name == "Actions" else "имя", one(t.item))
+        if field.asset and t.kind in ("name", "string"):
+            return "ассет `{}`".format(field.asset)
         return names[t.kind]
 
     return one(type_)
@@ -121,7 +123,8 @@ def render(schema, sections=None):
         "- время — в секундах, расстояния — в сантиметрах, углы — в градусах;",
         "- `id` — короткое имя латиницей без пробелов (`husk_slash`); по нему сущности ссылаются друг на друга;",
         "- текст, который начинается с `#` или похож на число либо на `yes` / `no`, берётся в кавычки: `\"#B0503A\"`;",
-        "- поле можно не писать — тогда действует значение по умолчанию.",
+        "- поле можно не писать — тогда действует значение по умолчанию;",
+        "- поле с типом «ассет» пишется логическим именем из `Game/assets.yaml`, а не путём.",
         "",
     ]
 

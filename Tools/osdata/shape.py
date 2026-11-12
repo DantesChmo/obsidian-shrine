@@ -16,9 +16,10 @@ def _suggest(word, candidates):
 
 
 class ShapeChecker:
-    def __init__(self, schema, problems):
+    def __init__(self, schema, problems, assets=None):
         self.schema = schema
         self.problems = problems
+        self.assets = assets    # AssetTable; asset fields are only resolved when it is given
 
     def _report(self, file, line, message):
         self.problems.append(Problem(file, line, message))
@@ -45,6 +46,8 @@ class ShapeChecker:
                 self._report(file, key_line, "{}.{} is {}, the minimum is {}".format(label, key, converted, field.minimum))
             if field.maximum is not None and isinstance(converted, (int, float)) and converted > field.maximum:
                 self._report(file, key_line, "{}.{} is {}, the maximum is {}".format(label, key, converted, field.maximum))
+            if field.asset and self.assets is not None:
+                converted = self.assets.resolve(converted, field.asset, file, key_line, "{}.{}".format(label, key))
             result[field.cpp_name] = converted
 
         for field in struct.fields.values():

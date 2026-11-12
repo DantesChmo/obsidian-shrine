@@ -1,0 +1,12 @@
+# Импортированные ассеты и их логические имена. В данных ассет пишется именем отсюда, не путём.
+# Наборы с Fab кладутся на машине сборки в Content/ThirdParty (в git не попадают).
+# Точные пути внутри наборов — в Docs/ASSET_INVENTORY.md: его пишет конвейер контента после импорта.
+# Справочник всех полей: Docs/REFERENCE.md
+
+Packs:
+  # Paragon: Greystone — игрок.
+  - { Id: greystone, Root: /Game/ThirdParty/ParagonGreystone }
+  # Paragon: Minions — обычный враг (Husk).
+  - { Id: minions, Root: /Game/ThirdParty/ParagonMinions }
+
+Assets: []
