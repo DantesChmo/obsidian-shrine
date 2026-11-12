@@ -27,6 +27,10 @@ public:
 	AOSInteractable* GetFocusedInteractable() const { return FocusedInteractable.Get(); }
 
 	virtual AActor* GetCombatTarget() const override;
+	virtual void AddCameraShake(float Strength, float Duration) override;
+
+	/** Camera offset of a shake Elapsed seconds in, before the random direction: fades linearly to zero. */
+	static float ShakeAmplitude(float Strength, float Duration, float Elapsed);
 	virtual FVector GetDesiredActionDirection() const override;
 
 	virtual void BeginPlay() override;
@@ -49,6 +53,10 @@ private:
 
 	TWeakObjectPtr<AOSInteractable> FocusedInteractable;
 
+	float ShakeStrength = 0.f;
+	float ShakeDuration = 0.f;
+	float ShakeElapsed = 0.f;
+
 	FVector2D MoveInput = FVector2D::ZeroVector;
 	bool bGuardHeld = false;
 	bool bSprintKeyHeld = false;
@@ -56,6 +64,7 @@ private:
 	float DodgeSprintHeldTime = 0.f;
 
 	void ApplyCameraSettings();
+	void UpdateCameraShake();
 	void Look(const FVector2D& Delta);
 
 	void OnMove(const FInputActionValue& Value);

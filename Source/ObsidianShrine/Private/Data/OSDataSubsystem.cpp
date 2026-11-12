@@ -129,6 +129,7 @@ void UOSDataSubsystem::Reset()
 	Characters.Reset();
 	AIProfiles.Reset();
 	AnimationSets.Reset();
+	Cosmetics.Reset();
 	GameDef = FOSGameDef();
 	InputDef = FOSInputDef();
 	TextsDef = FOSTextsDef();
@@ -210,6 +211,7 @@ bool UOSDataSubsystem::LoadFromJsonString(const FString& Json, const FString& So
 	for (const FOSCharacterDef& Def : File.Characters) { AddCharacter(Def, SourceName); }
 	for (const FOSAIProfileDef& Def : File.AIProfiles) { AddAIProfile(Def, SourceName); }
 	for (const FOSAnimationSetDef& Def : File.AnimationSets) { AddAnimationSet(Def, SourceName); }
+	for (const FOSCosmeticsDef& Def : File.Cosmetics) { AddCosmetics(Def, SourceName); }
 	return true;
 }
 
@@ -261,6 +263,12 @@ void UOSDataSubsystem::AddAnimationSet(const FOSAnimationSetDef& Def, const FStr
 {
 	FString Error;
 	if (!AddDefinition(AnimationSets, Def, TEXT("animation set"), SourceName, Error)) { ReportLoadError(Error); }
+}
+
+void UOSDataSubsystem::AddCosmetics(const FOSCosmeticsDef& Def, const FString& SourceName)
+{
+	FString Error;
+	if (!AddDefinition(Cosmetics, Def, TEXT("cosmetics"), SourceName, Error)) { ReportLoadError(Error); }
 }
 
 void UOSDataSubsystem::ReportLoadError(const FString& Message)
@@ -338,6 +346,10 @@ TArray<FString> UOSDataSubsystem::Validate() const
 		if (!Def.AnimationSet.IsNone() && !AnimationSets.Contains(Def.AnimationSet))
 		{
 			Errors.Add(FString::Printf(TEXT("%s references unknown animation set '%s'"), *Owner, *Def.AnimationSet.ToString()));
+		}
+		if (!Def.Cosmetics.IsNone() && !Cosmetics.Contains(Def.Cosmetics))
+		{
+			Errors.Add(FString::Printf(TEXT("%s references unknown cosmetics '%s'"), *Owner, *Def.Cosmetics.ToString()));
 		}
 	}
 

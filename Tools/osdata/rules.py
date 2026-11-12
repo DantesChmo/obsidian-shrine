@@ -13,6 +13,7 @@ SECTIONS = {
     "Characters": ("FOSCharacterDef", "character"),
     "AIProfiles": ("FOSAIProfileDef", "AI profile"),
     "AnimationSets": ("FOSAnimationSetDef", "animation set"),
+    "Cosmetics": ("FOSCosmeticsDef", "cosmetics"),
 }
 
 # Slots the engine itself triggers; anything else in a slot map is a typo.
@@ -57,6 +58,7 @@ def check(registry, problems):
     characters = registry.sections["Characters"]
     profiles = registry.sections["AIProfiles"]
     animation_sets = registry.sections["AnimationSets"]
+    cosmetics = registry.sections["Cosmetics"]
 
     def report(entry, line, message):
         problems.append(Problem(entry.file, line, message))
@@ -126,6 +128,8 @@ def check(registry, problems):
             report(entry, entry.line("AIProfile"), "{} uses AI profile '{}', which is not defined anywhere".format(owner, data["AIProfile"]))
         if data.get("AnimationSet") and data["AnimationSet"] not in animation_sets:
             report(entry, entry.line("AnimationSet"), "{} uses animation set '{}', which is not defined anywhere".format(owner, data["AnimationSet"]))
+        if data.get("Cosmetics") and data["Cosmetics"] not in cosmetics:
+            report(entry, entry.line("Cosmetics"), "{} uses cosmetics '{}', which are not defined anywhere".format(owner, data["Cosmetics"]))
         if data.get("AnimationSet") and not data.get("Mesh"):
             report(entry, entry.line("AnimationSet"), "{} has an animation set but no Mesh to play it on".format(owner))
         check_slots(entry, "character")

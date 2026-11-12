@@ -11,12 +11,17 @@
 #include "Engine/SkeletalMesh.h"
 #include "Engine/StaticMesh.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "ObsidianShrine.h"
+#include "TimerManager.h"
 #include "UObject/ConstructorHelpers.h"
 
 namespace
 {
+	/** How slowly a character in hit-stop still runs. Not zero, so nothing divides by its delta time. */
+	constexpr float HitStopTimeDilation = 0.01f;
+
 	const FLinearColor InvulnerableColor(0.9f, 0.9f, 1.f);
 	const FLinearColor DeadColor(0.05f, 0.05f, 0.05f);
 }
@@ -28,6 +33,7 @@ AOSCharacterBase::AOSCharacterBase()
 	Stats = CreateDefaultSubobject<UOSStatsComponent>(TEXT("Stats"));
 	Action = CreateDefaultSubobject<UOSActionComponent>(TEXT("Action"));
 	Combat = CreateDefaultSubobject<UOSCombatComponent>(TEXT("Combat"));
+	Cosmetics = CreateDefaultSubobject<UOSCosmeticsComponent>(TEXT("Cosmetics"));
 
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> CylinderMesh(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
@@ -70,6 +76,7 @@ void AOSCharacterBase::BeginPlay()
 	Combat->Setup(Stats, Action);
 	Action->OnActionStarted.AddUObject(this, &AOSCharacterBase::HandleActionStarted);
 	Stats->OnDeath.AddUObject(this, &AOSCharacterBase::HandleDeath);
+	Combat->OnHitReceived.AddUObject(this, &AOSCharacterBase::HandleHitReceived);
 
 	ApplyDefinition(CharacterId);
 
@@ -107,6 +114,8 @@ bool AOSCharacterBase::ApplyDefinition(FName InCharacterId, bool bKeepState)
 	Definition = *Found;
 	const FOSAnimationSetDef* FoundSet = Data->FindAnimationSet(Definition.AnimationSet);
 	AnimationSet = FoundSet ? *FoundSet : FOSAnimationSetDef();
+	const FOSCosmeticsDef* FoundCosmetics = Data->FindCosmetics(Definition.Cosmetics);
+	Cosmetics->SetDefinition(FoundCosmetics ? *FoundCosmetics : FOSCosmeticsDef());
 	if (bKeepState)
 	{
 		Stats->UpdateFromDef(Definition);
@@ -205,6 +214,7 @@ void AOSCharacterBase::Tick(float DeltaTime)
 	{
 		UpdateMovement(DeltaTime);
 		UpdateFacing(DeltaTime);
+		UpdateFootsteps(DeltaTime);
 	}
 
 	if (bHasSkeletalMesh)
@@ -307,6 +317,11 @@ void AOSCharacterBase::HandleActionStarted(const FOSActionDef& Def)
 	}
 
 	PlayActionAnimation(Def);
+
+	if (Action->GetCurrentSlot() == OSSlots::Dodge)
+	{
+		PlayCue(EOSCue::Dodge);
+	}
 }
 
 void AOSCharacterBase::HandleDeath()
@@ -316,8 +331,79 @@ void AOSCharacterBase::HandleDeath()
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 	GetCharacterMovement()->StopMovementImmediately();
 
+	PlayCue(EOSCue::Death);
 	OnDeath();
 	OnDied.Broadcast(this);
+}
+
+void AOSCharacterBase::HandleHitReceived(const FOSHitResult& Result, const FOSHitInfo& Hit)
+{
+	EOSCue Cue;
+	if (UOSCosmeticsComponent::CueForHit(Result.Outcome, Cue))
+	{
+		PlayCue(Cue, Cast<AOSCharacterBase>(Hit.Instigator.Get()));
+	}
+}
+
+void AOSCharacterBase::PlayCue(EOSCue Cue, AOSCharacterBase* Other)
+{
+	const FVector Location = Cue == EOSCue::Footstep
+		? GetActorLocation() - FVector(0.f, 0.f, GetCapsuleComponent()->GetScaledCapsuleHalfHeight())
+		: GetActorLocation();
+	const FOSCueDef& Def = Cosmetics->Play(Cue, Location);
+
+	if (Def.HitStop > 0.f)
+	{
+		ApplyHitStop(Def.HitStop);
+		if (Other && Other != this)
+		{
+			Other->ApplyHitStop(Def.HitStop);
+		}
+	}
+	if (Def.Shake > 0.f)
+	{
+		if (AOSCharacterBase* Player = Cast<AOSCharacterBase>(UGameplayStatics::GetPlayerPawn(this, 0)))
+		{
+			Player->AddCameraShake(Def.Shake, Def.ShakeDuration);
+		}
+	}
+}
+
+void AOSCharacterBase::ApplyHitStop(float Seconds)
+{
+	if (Seconds <= 0.f || !GetWorld())
+	{
+		return;
+	}
+	FTimerManager& Timers = GetWorldTimerManager();
+	const float Left = Timers.IsTimerActive(HitStopTimer) ? Timers.GetTimerRemaining(HitStopTimer) : 0.f;
+	CustomTimeDilation = HitStopTimeDilation;
+	// The world's timers run on world time, which the actor's own dilation does not slow down.
+	Timers.SetTimer(HitStopTimer, this, &AOSCharacterBase::EndHitStop, FMath::Max(Left, Seconds), false);
+}
+
+bool AOSCharacterBase::IsInHitStop() const
+{
+	return CustomTimeDilation < 1.f;
+}
+
+void AOSCharacterBase::EndHitStop()
+{
+	CustomTimeDilation = 1.f;
+}
+
+void AOSCharacterBase::UpdateFootsteps(float DeltaTime)
+{
+	if (!GetCharacterMovement()->IsMovingOnGround())
+	{
+		return;
+	}
+	const int32 Steps = Cosmetics->AdvanceFootsteps(GetVelocity().Size2D() * DeltaTime);
+	if (Steps > 0)
+	{
+		// A long frame may cover several strides; one sound is enough.
+		PlayCue(EOSCue::Footstep);
+	}
 }
 
 void AOSCharacterBase::FellOutOfWorld(const UDamageType& DamageType)

@@ -73,7 +73,7 @@ def load_schema(root, problems):
 
     for field in schema.structs["FOSActionDef"].fields.values():
         field.required = field.name in ("Id", "Duration")
-    for struct_name in ("FOSWeaponDef", "FOSCharacterDef", "FOSAIProfileDef", "FOSAnimationSetDef"):
+    for struct_name in ("FOSWeaponDef", "FOSCharacterDef", "FOSAIProfileDef", "FOSAnimationSetDef", "FOSCosmeticsDef"):
         schema.structs[struct_name].fields["Id"].required = True
 
     try:

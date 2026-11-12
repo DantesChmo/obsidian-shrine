@@ -429,6 +429,29 @@ bool FOSWorldReapplyTest::RunTest(const FString& Parameters)
 	return true;
 }
 
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOSWorldHitStopTest, "ObsidianShrine.World.HitStopFreezesThenReleases", OS_TEST_FLAGS)
+
+bool FOSWorldHitStopTest::RunTest(const FString& Parameters)
+{
+	FOSCharacterDef Dummy;
+	Dummy.Id = TEXT("test_hitstop_dummy");
+	OSTest::Register(Dummy);
+
+	FOSTestWorld TestWorld;
+	AOSCharacterBase* Character = TestWorld.Spawn(TEXT("test_hitstop_dummy"), EOSFaction::Enemy, FVector::ZeroVector);
+	TestFalse(TEXT("runs normally"), Character->IsInHitStop());
+
+	Character->ApplyHitStop(0.1f);
+	TestTrue(TEXT("frozen"), Character->IsInHitStop());
+	Character->ApplyHitStop(0.05f);
+
+	TestWorld.World->Tick(LEVELTICK_All, 0.08f);
+	TestTrue(TEXT("a shorter hit-stop does not cut the longer one short"), Character->IsInHitStop());
+	TestWorld.World->Tick(LEVELTICK_All, 0.05f);
+	TestFalse(TEXT("released after the longest"), Character->IsInHitStop());
+	return true;
+}
+
 IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOSWorldMapExitTest, "ObsidianShrine.World.MapExitArrivalAndSeal", OS_TEST_FLAGS)
 
 bool FOSWorldMapExitTest::RunTest(const FString& Parameters)

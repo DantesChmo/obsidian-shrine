@@ -118,3 +118,32 @@ class AnimationSets(ProjectCase):
     def test_set_without_mesh(self):
         self.put("Game/data/a.yaml", ANIMATED.replace("    Mesh: hero_body\n", ""))
         self.assertProblem("Game/data/a.yaml:15", "no Mesh")
+
+
+COSMETICS = """
+Cosmetics:
+  - Id: grunt_fx
+    FootstepDistance: 140
+    Hit: { Sound: hero_grunt, HitStop: 0.05 }
+"""
+
+
+class Cosmetics(ProjectCase):
+    def setUp(self):
+        ProjectCase.setUp(self)
+        self.put("Game/assets.yaml", ASSETS + "  - { Id: hero_grunt, Type: Sound, Pack: hero, Path: Sounds/Grunt }\n")
+
+    def test_cue_sound_resolves(self):
+        self.put("Game/data/a.yaml", VALID_DATA.replace("    Weapon: blade\n", "    Weapon: blade\n    Cosmetics: grunt_fx\n") + COSMETICS)
+        build = self.build()
+        self.assertEqual([str(problem) for problem in build.problems], [])
+        cosmetics = json.loads(build.outputs["Content/Data/a.json"])["Cosmetics"][0]
+        self.assertEqual(cosmetics["Hit"]["Sound"], "/Game/ThirdParty/Hero/Sounds/Grunt.Grunt")
+
+    def test_unknown_cosmetics(self):
+        self.put("Game/data/a.yaml", VALID_DATA.replace("    Weapon: blade\n", "    Weapon: blade\n    Cosmetics: nothing\n"))
+        self.assertProblem("Game/data/a.yaml:15", "cosmetics 'nothing'")
+
+    def test_hit_stop_is_capped(self):
+        self.put("Game/data/a.yaml", VALID_DATA + COSMETICS.replace("HitStop: 0.05", "HitStop: 2"))
+        self.assertTrue(any("the maximum is 0.5" in text for text in self.problems()), self.problems())

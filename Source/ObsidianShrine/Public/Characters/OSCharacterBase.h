@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "Data/OSDataTypes.h"
 #include "GameFramework/Character.h"
+#include "Presentation/OSCosmeticsComponent.h"
 
 #include "OSCharacterBase.generated.h"
 
@@ -12,6 +13,8 @@ class UMaterialInstanceDynamic;
 class UOSActionComponent;
 class UOSCombatComponent;
 class UOSStatsComponent;
+struct FOSHitInfo;
+struct FOSHitResult;
 class UStaticMeshComponent;
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOSOnCharacterDied, AOSCharacterBase*);
@@ -46,6 +49,20 @@ public:
 	UOSStatsComponent* GetStats() const { return Stats; }
 	UOSActionComponent* GetAction() const { return Action; }
 	UOSCombatComponent* GetCombat() const { return Combat; }
+	UOSCosmeticsComponent* GetCosmetics() const { return Cosmetics; }
+
+	/**
+	 * Plays one of this character's cues: sound and effect here, camera shake for the player, hit-stop for
+	 * this character and Other (the attacker, for hits).
+	 */
+	void PlayCue(EOSCue Cue, AOSCharacterBase* Other = nullptr);
+
+	/** Freezes the character for Seconds of game time; overlapping hit-stops last until the longest ends. */
+	void ApplyHitStop(float Seconds);
+	bool IsInHitStop() const;
+
+	/** Only the player has a camera to shake. */
+	virtual void AddCameraShake(float Strength, float Duration) {}
 
 	bool IsAlive() const;
 
@@ -73,6 +90,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, Category = "Obsidian")
 	TObjectPtr<UOSCombatComponent> Combat;
+
+	UPROPERTY(VisibleAnywhere, Category = "Obsidian")
+	TObjectPtr<UOSCosmeticsComponent> Cosmetics;
 
 	UPROPERTY(VisibleAnywhere, Category = "Obsidian")
 	TObjectPtr<UStaticMeshComponent> PlaceholderBody;
@@ -107,6 +127,8 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UAnimSequenceBase> LoopingAnimation;
 
+	FTimerHandle HitStopTimer;
+
 	FVector ActionMoveDirection = FVector::ForwardVector;
 	FVector LastGroundedLocation = FVector::ZeroVector;
 	FLinearColor BaseColor = FLinearColor::Gray;
@@ -117,6 +139,9 @@ private:
 
 	void HandleActionStarted(const FOSActionDef& Def);
 	void HandleDeath();
+	void HandleHitReceived(const FOSHitResult& Result, const FOSHitInfo& Hit);
+	void EndHitStop();
+	void UpdateFootsteps(float DeltaTime);
 
 	void ApplyVisuals();
 	void UpdateMovement(float DeltaTime);

@@ -19,7 +19,8 @@ public class ObsidianShrine : ModuleRules
 
 		PrivateDependencyModuleNames.AddRange(new string[]
 		{
-			"EngineSettings"
+			"EngineSettings",
+			"Niagara"
 		});
 	}
 }

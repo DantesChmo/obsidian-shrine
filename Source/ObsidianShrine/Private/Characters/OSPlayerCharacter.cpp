@@ -62,6 +62,36 @@ void AOSPlayerCharacter::ApplyCameraSettings()
 	CameraBoom->CameraLagSpeed = Settings.LagSpeed;
 }
 
+void AOSPlayerCharacter::AddCameraShake(float Strength, float Duration)
+{
+	// A stronger shake replaces a weaker one that is still running; a weaker one does not cut a strong one short.
+	if (ShakeAmplitude(ShakeStrength, ShakeDuration, ShakeElapsed) <= Strength)
+	{
+		ShakeStrength = Strength;
+		ShakeDuration = Duration;
+		ShakeElapsed = 0.f;
+	}
+}
+
+float AOSPlayerCharacter::ShakeAmplitude(float Strength, float Duration, float Elapsed)
+{
+	if (Strength <= 0.f || Duration <= 0.f || Elapsed >= Duration)
+	{
+		return 0.f;
+	}
+	return Strength * (1.f - Elapsed / Duration);
+}
+
+void AOSPlayerCharacter::UpdateCameraShake()
+{
+	// World time, so the shake keeps going while the player is frozen in hit-stop.
+	ShakeElapsed += GetWorld()->GetDeltaSeconds();
+	const float Amplitude = ShakeAmplitude(ShakeStrength, ShakeDuration, ShakeElapsed);
+	Camera->SetRelativeLocation(Amplitude > 0.f
+		? FVector(0.f, FMath::FRandRange(-1.f, 1.f), FMath::FRandRange(-1.f, 1.f)) * Amplitude
+		: FVector::ZeroVector);
+}
+
 AActor* AOSPlayerCharacter::GetCombatTarget() const
 {
 	return LockOn->GetTarget();
@@ -86,6 +116,7 @@ void AOSPlayerCharacter::Tick(float DeltaTime)
 	bWantsSprint = bSprintKeyHeld || (bDodgeSprintHeld && DodgeSprintHeldTime > UOSDataSubsystem::Settings().Controls.DodgeTapTime);
 
 	Super::Tick(DeltaTime);
+	UpdateCameraShake();
 
 	if (!IsAlive())
 	{

@@ -6,8 +6,9 @@
 
 /**
  * Plain data definitions loaded from Content/Data/*.json by UOSDataSubsystem.
- * Field names here are the JSON keys. Asset references are path strings so a definition
- * stays valid (and falls back to placeholder visuals) when the asset is not imported.
+ * Field names here are the JSON keys. Asset references are object path strings (the data compiler writes
+ * them from the logical names of Game/assets.yaml), so a definition stays valid, falling back to placeholder
+ * visuals and silence, when the asset is not imported.
  */
 
 /** Well-known action slots. A slot is resolved to an action id through the character and weapon definitions. */
@@ -276,6 +277,85 @@ struct FOSCharacterDef
 	/** Animation set played on Mesh. Optional: without it the mesh stands in its reference pose. */
 	UPROPERTY()
 	FName AnimationSet;
+
+	/** Sounds, effects, camera shake and hit-stop of this character's events. Optional. */
+	UPROPERTY()
+	FName Cosmetics;
+};
+
+/** What one presentation event plays. Every part is optional. */
+USTRUCT()
+struct FOSCueDef
+{
+	GENERATED_BODY()
+
+	/** USoundBase path. */
+	UPROPERTY()
+	FString Sound;
+
+	UPROPERTY()
+	float Volume = 1.f;
+
+	/** UNiagaraSystem or UParticleSystem path. */
+	UPROPERTY()
+	FString Effect;
+
+	UPROPERTY()
+	float EffectScale = 1.f;
+
+	/** Camera shake of the player, cm of camera offset at the start; it fades out over ShakeDuration. */
+	UPROPERTY()
+	float Shake = 0.f;
+
+	UPROPERTY()
+	float ShakeDuration = 0.2f;
+
+	/** Seconds the characters involved freeze (for a hit: the one hit and the attacker). */
+	UPROPERTY()
+	float HitStop = 0.f;
+};
+
+/**
+ * Presentation of one character: what plays when it is hit, guards, dodges, steps, dies, changes phase.
+ * Cosmetic only: nothing here changes the outcome of a fight, except that hit-stop delays both fighters alike.
+ */
+USTRUCT()
+struct FOSCosmeticsDef
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FName Id;
+
+	/** This character takes damage. */
+	UPROPERTY()
+	FOSCueDef Hit;
+
+	/** This character blocks a hit (also when the guard breaks). */
+	UPROPERTY()
+	FOSCueDef Guard;
+
+	/** This character blocks a hit perfectly. */
+	UPROPERTY()
+	FOSCueDef PerfectGuard;
+
+	/** This character starts its Dodge action. */
+	UPROPERTY()
+	FOSCueDef Dodge;
+
+	UPROPERTY()
+	FOSCueDef Footstep;
+
+	/** Distance walked between two footsteps, cm. */
+	UPROPERTY()
+	float FootstepDistance = 160.f;
+
+	UPROPERTY()
+	FOSCueDef Death;
+
+	/** A boss enters its next phase. */
+	UPROPERTY()
+	FOSCueDef PhaseChange;
 };
 
 /**
@@ -677,6 +757,9 @@ struct FOSDataFile
 
 	UPROPERTY()
 	TArray<FOSAnimationSetDef> AnimationSets;
+
+	UPROPERTY()
+	TArray<FOSCosmeticsDef> Cosmetics;
 
 	/** At most one file may contain each of the three sections below. */
 	UPROPERTY()

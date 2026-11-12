@@ -158,6 +158,7 @@ void UOSAIBrainComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 	if (NewPhase > Phase)
 	{
 		Phase = NewPhase;
+		Self->PlayCue(EOSCue::PhaseChange);
 		const FName EnterAction = Profile.Phases[Phase - 1].EnterAction;
 		if (!EnterAction.IsNone())
 		{
