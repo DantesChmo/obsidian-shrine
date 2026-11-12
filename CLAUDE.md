@@ -15,10 +15,13 @@ Souls-like action RPG tech demo. Unreal Engine 5 (C++), target platform Win64 on
 - No Blueprints and no hand-edited binary assets. Gameplay is C++; every asset and level is produced by Python scripts in
   `Content/Python` (entry: `build_content.py`), so `Content/` can be rebuilt from text. The only accepted exception is
   Animation Blueprints if a C++/script-only route proves impossible — decide explicitly, do not drift into it.
-- Game content is authored as YAML manifests in `Game/` (definitions in `Game/data`, levels in `Game/levels`) and
+- Game content is authored as YAML manifests in `Game/` (definitions in `Game/data`, levels in `Game/levels`,
+  settings / key bindings / texts in `Game/game.yaml`, `input.yaml`, `texts.yaml`) and
   compiled by `python3 Tools/build_data.py` into `Content/Data` and `Content/LevelData`. Never edit the generated
   JSON; commit it together with the YAML. Run the compiler and `python3 -B -m unittest discover -s Tools/tests`
   after every manifest or tool change: both run on the Mac.
+- No gameplay numbers, key names or player-visible texts in C++: they are fields of `FOSGameDef`, `FOSInputDef`,
+  `FOSTextsDef` or of a definition. What deliberately stays in code is listed in `Docs/ROADMAP.md`.
 - A manifest field exists only together with the code that executes it. New enemies, weapons, attacks and levels
   must not need C++ or Python changes; a new mechanic is coded once and then exposed as a field.
 - Field descriptions and ranges live in `Game/schema/fields.yaml` (Russian, user-facing); `Docs/REFERENCE.md` is
@@ -34,8 +37,12 @@ Souls-like action RPG tech demo. Unreal Engine 5 (C++), target platform Win64 on
 ## Architecture
 
 - No GAS. `UOSDataSubsystem` (engine subsystem) loads the generated JSON; structs are in `Public/Data/OSDataTypes.h`.
+  Read settings where they are used through the static `UOSDataSubsystem::Settings()` / `Bindings()` / `Texts()`
+  (never copy them into members), so `os.ReloadData` takes effect at once. Whoever does keep a copy of a
+  definition (characters, AI brain, key mappings) refreshes it on `OnReloaded`, keeping the running state.
 - Data tools: `Tools/osdata` (`source` YAML with line numbers, `schema` from the C++ header, `shape` type checks,
-  `rules` cross-references, `levels` level manifests, `reference` docs). Vendored PyYAML in `Tools/vendor`;
+  `rules` cross-references, `levels` level manifests, `settings` game/input/texts and the start map in
+  `Config/DefaultEngine.ini`, `keys` valid key names, `reference` docs). Vendored PyYAML in `Tools/vendor`;
   keep the tools on Python 3.11 syntax (the engine's bundled Python runs them on Windows).
 - An action is a timeline of windows (Hit, Invulnerable, Guard, PerfectGuard, HyperArmor, Cancel) run by
   `UOSActionComponent`; gameplay timing comes from data, never from animation notifies. Animations are optional
@@ -44,7 +51,8 @@ Souls-like action RPG tech demo. Unreal Engine 5 (C++), target platform Win64 on
   an actor or world; test them that way (`Private/Tests/OSTestHelpers.h`). Use a real world only for scene queries.
 - `AOSCharacterBase` is fully defined by `CharacterId`; `AOSEnemyCharacter` + `UOSAIBrainComponent` cover regular
   enemies and bosses alike. Without meshes characters render as placeholders.
-- Input actions are built in code in `AOSPlayerController`; the HUD is canvas-drawn (`AOSHUD`). No input or UI assets.
+- Input actions are built in code in `AOSPlayerController`, their keys come from `Game/input.yaml`; the HUD is
+  canvas-drawn (`AOSHUD`). No input or UI assets.
 - Death loop and save: `AOSGameMode` + `UOSProgressSubsystem` (`FOSProgressState`).
 - Levels are built by `os_content/level_builder.py` from `Content/LevelData/*.json`; it only places what the
   resolved manifest lists. Roadmap: `Docs/ROADMAP.md`.
