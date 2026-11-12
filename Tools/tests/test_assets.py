@@ -77,3 +77,44 @@ class Validation(ProjectCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+ANIMATED = WITH_MESH.replace("    Mesh: hero_body\n", "    Mesh: hero_body\n    AnimationSet: hero_anims\n") + """
+AnimationSets:
+  - Id: hero_anims
+    Idle: hero_swing
+    WalkSpeed: 300
+    Actions:
+      swing: hero_swing
+"""
+
+
+class AnimationSets(ProjectCase):
+    def setUp(self):
+        ProjectCase.setUp(self)
+        self.put("Game/assets.yaml", ASSETS)
+
+    def test_set_resolves_locomotion_and_actions(self):
+        self.put("Game/data/a.yaml", ANIMATED)
+        build = self.build()
+        self.assertEqual([str(problem) for problem in build.problems], [])
+        animation_set = json.loads(build.outputs["Content/Data/a.json"])["AnimationSets"][0]
+        path = "/Game/ThirdParty/Hero/Animations/Swing_A.Swing_A"
+        self.assertEqual(animation_set["Idle"], path)
+        self.assertEqual(animation_set["Actions"], {"swing": path})
+
+    def test_unknown_action_in_set(self):
+        self.put("Game/data/a.yaml", ANIMATED.replace("      swing: hero_swing", "      swang: hero_swing"))
+        self.assertProblem("Game/data/a.yaml:30", "animation set 'hero_anims'", "action 'swang'")
+
+    def test_wrong_asset_type_in_set(self):
+        self.put("Game/data/a.yaml", ANIMATED.replace("      swing: hero_swing", "      swing: hero_body"))
+        self.assertProblem("Game/data/a.yaml:30", "needs a Animation")
+
+    def test_unknown_set(self):
+        self.put("Game/data/a.yaml", ANIMATED.replace("AnimationSet: hero_anims", "AnimationSet: villain_anims"))
+        self.assertProblem("Game/data/a.yaml:16", "animation set 'villain_anims'")
+
+    def test_set_without_mesh(self):
+        self.put("Game/data/a.yaml", ANIMATED.replace("    Mesh: hero_body\n", ""))
+        self.assertProblem("Game/data/a.yaml:15", "no Mesh")

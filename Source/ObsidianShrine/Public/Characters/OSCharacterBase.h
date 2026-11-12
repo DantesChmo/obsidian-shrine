@@ -84,6 +84,8 @@ protected:
 	TObjectPtr<UStaticMeshComponent> WeaponMesh;
 
 	FOSCharacterDef Definition;
+	/** Copy of the definition's animation set; empty when it has none. */
+	FOSAnimationSetDef AnimationSet;
 
 	/** Set by subclasses each frame; the base turns it into speed and stamina drain. */
 	bool bWantsSprint = false;
@@ -110,7 +112,8 @@ private:
 	FLinearColor BaseColor = FLinearColor::Gray;
 	int32 TintState = -1;
 	bool bHasSkeletalMesh = false;
-	bool bUsesAnimInstance = false;
+	/** The running action has its own animation, so locomotion must not replace it. */
+	bool bActionAnimationPlaying = false;
 
 	void HandleActionStarted(const FOSActionDef& Def);
 	void HandleDeath();

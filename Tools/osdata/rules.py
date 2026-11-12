@@ -12,6 +12,7 @@ SECTIONS = {
     "Weapons": ("FOSWeaponDef", "weapon"),
     "Characters": ("FOSCharacterDef", "character"),
     "AIProfiles": ("FOSAIProfileDef", "AI profile"),
+    "AnimationSets": ("FOSAnimationSetDef", "animation set"),
 }
 
 # Slots the engine itself triggers; anything else in a slot map is a typo.
@@ -55,6 +56,7 @@ def check(registry, problems):
     weapons = registry.sections["Weapons"]
     characters = registry.sections["Characters"]
     profiles = registry.sections["AIProfiles"]
+    animation_sets = registry.sections["AnimationSets"]
 
     def report(entry, line, message):
         problems.append(Problem(entry.file, line, message))
@@ -122,7 +124,18 @@ def check(registry, problems):
             report(entry, entry.line("Weapon"), "{} uses weapon '{}', which is not defined anywhere".format(owner, data["Weapon"]))
         if data.get("AIProfile") and data["AIProfile"] not in profiles:
             report(entry, entry.line("AIProfile"), "{} uses AI profile '{}', which is not defined anywhere".format(owner, data["AIProfile"]))
+        if data.get("AnimationSet") and data["AnimationSet"] not in animation_sets:
+            report(entry, entry.line("AnimationSet"), "{} uses animation set '{}', which is not defined anywhere".format(owner, data["AnimationSet"]))
+        if data.get("AnimationSet") and not data.get("Mesh"):
+            report(entry, entry.line("AnimationSet"), "{} has an animation set but no Mesh to play it on".format(owner))
         check_slots(entry, "character")
+
+    for entry in animation_sets.values():
+        animations = entry.source.get("Actions")
+        if not isinstance(animations, dict):
+            continue
+        for action_id in animations:
+            check_action(entry, animations.line_of(action_id), action_id, "animation set '{}'".format(entry.id))
 
     for entry in profiles.values():
         data = entry.data

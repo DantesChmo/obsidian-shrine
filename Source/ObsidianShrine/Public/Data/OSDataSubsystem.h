@@ -54,12 +54,14 @@ public:
 	void AddWeapon(const FOSWeaponDef& Def, const FString& SourceName = FString());
 	void AddCharacter(const FOSCharacterDef& Def, const FString& SourceName = FString());
 	void AddAIProfile(const FOSAIProfileDef& Def, const FString& SourceName = FString());
+	void AddAnimationSet(const FOSAnimationSetDef& Def, const FString& SourceName = FString());
 
 	/** Returned pointers are invalidated by any Add or Reload: copy the struct if it must outlive the call. */
 	const FOSActionDef* FindAction(FName Id) const { return Actions.Find(Id); }
 	const FOSWeaponDef* FindWeapon(FName Id) const { return Weapons.Find(Id); }
 	const FOSCharacterDef* FindCharacter(FName Id) const { return Characters.Find(Id); }
 	const FOSAIProfileDef* FindAIProfile(FName Id) const { return AIProfiles.Find(Id); }
+	const FOSAnimationSetDef* FindAnimationSet(FName Id) const { return AnimationSets.Find(Id); }
 
 	int32 NumActions() const { return Actions.Num(); }
 	int32 NumCharacters() const { return Characters.Num(); }
@@ -85,6 +87,7 @@ private:
 	TMap<FName, FOSWeaponDef> Weapons;
 	TMap<FName, FOSCharacterDef> Characters;
 	TMap<FName, FOSAIProfileDef> AIProfiles;
+	TMap<FName, FOSAnimationSetDef> AnimationSets;
 
 	FOSGameDef GameDef;
 	FOSInputDef InputDef;

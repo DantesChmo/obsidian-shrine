@@ -11,6 +11,10 @@ SECTIONS = [
      "Урон, размер зоны удара, свойства блока и то, какие действия вызывают кнопки."),
     ("Персонаж", "FOSCharacterDef", "`Game/data/*.yaml`, секция `Characters`",
      "Игрок, враг или босс: характеристики, оружие, реакции, внешний вид."),
+    ("Набор анимаций", "FOSAnimationSetDef", "`Game/data/*.yaml`, секция `AnimationSets`",
+     "Анимации одного скелета: стоя, ходьба, бег и по одной на действие. Действия общие для разных персонажей "
+     "(реакции, смерть), а анимации у каждой модели свои, поэтому они здесь, а не в действии. Играются без "
+     "Animation Blueprint: одна анимация за раз, без плавного смешивания."),
     ("Профиль ИИ", "FOSAIProfileDef", "`Game/data/*.yaml`, секция `AIProfiles`",
      "Поведение врага: когда замечает игрока, чем и с какой дистанции атакует, какие у него фазы."),
     ("Атака в профиле ИИ", "FOSAIMoveDef", "внутри `Moves` у профиля ИИ",
@@ -93,7 +97,10 @@ def _format_type(field, schema):
         if t.kind == "array":
             return "список: {}".format(one(t.item))
         if t.kind == "map":
-            return "{} → {}".format("слот" if field.name == "Actions" else "имя", one(t.item))
+            key = "имя"
+            if field.name == "Actions":
+                key = "действие" if field.asset else "слот"
+            return "{} → {}".format(key, one(t.item))
         if field.asset and t.kind in ("name", "string"):
             return "ассет `{}`".format(field.asset)
         return names[t.kind]

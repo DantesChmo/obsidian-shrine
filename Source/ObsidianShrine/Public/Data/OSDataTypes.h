@@ -140,11 +140,7 @@ struct FOSActionDef
 	UPROPERTY()
 	float MoveSpeedScale = 0.f;
 
-	/** UAnimMontage or UAnimSequence path. Optional. */
-	UPROPERTY()
-	FString Animation;
-
-	/** Stretch the animation so its length matches Duration. */
+	/** Stretch the character's animation for this action (its animation set) so it lasts exactly Duration. */
 	UPROPERTY()
 	bool bFitAnimation = true;
 
@@ -277,15 +273,49 @@ struct FOSCharacterDef
 	UPROPERTY()
 	float MeshYaw = -90.f;
 
-	/** UAnimInstance class path. Optional: without it animations play in single-node mode. */
+	/** Animation set played on Mesh. Optional: without it the mesh stands in its reference pose. */
 	UPROPERTY()
-	FString AnimClass;
+	FName AnimationSet;
+};
+
+/**
+ * Animations of one skeleton: locomotion plus one animation per action. Actions are shared between
+ * characters (reactions, deaths), animations are not, so they live here and not on the action.
+ * Played without an animation blueprint: one animation at a time, no blending.
+ */
+USTRUCT()
+struct FOSAnimationSetDef
+{
+	GENERATED_BODY()
 
 	UPROPERTY()
-	FString IdleAnimation;
+	FName Id;
+
+	/** Standing still. */
+	UPROPERTY()
+	FString Idle;
 
 	UPROPERTY()
-	FString MoveAnimation;
+	FString Walk;
+
+	/** While sprinting. Empty: Walk. */
+	UPROPERTY()
+	FString Run;
+
+	/** Speed, cm/s, at which Walk's feet match the ground; it is played faster or slower to match. 0: as authored. */
+	UPROPERTY()
+	float WalkSpeed = 0.f;
+
+	/** Same for Run. */
+	UPROPERTY()
+	float RunSpeed = 0.f;
+
+	/** Action id -> animation. Actions not listed keep whatever was playing. */
+	UPROPERTY()
+	TMap<FName, FString> Actions;
+
+	/** The looping animation for a character moving at Speed, and the rate to play it at. */
+	const FString& PickLocomotion(float Speed, bool bSprinting, float& OutRate) const;
 };
 
 USTRUCT()
@@ -644,6 +674,9 @@ struct FOSDataFile
 
 	UPROPERTY()
 	TArray<FOSAIProfileDef> AIProfiles;
+
+	UPROPERTY()
+	TArray<FOSAnimationSetDef> AnimationSets;
 
 	/** At most one file may contain each of the three sections below. */
 	UPROPERTY()

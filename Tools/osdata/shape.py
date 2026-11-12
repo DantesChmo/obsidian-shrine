@@ -47,7 +47,7 @@ class ShapeChecker:
             if field.maximum is not None and isinstance(converted, (int, float)) and converted > field.maximum:
                 self._report(file, key_line, "{}.{} is {}, the maximum is {}".format(label, key, converted, field.maximum))
             if field.asset and self.assets is not None:
-                converted = self.assets.resolve(converted, field.asset, file, key_line, "{}.{}".format(label, key))
+                converted = self.assets.resolve(converted, field.asset, file, key_line, "{}.{}".format(label, key), item)
             result[field.cpp_name] = converted
 
         for field in struct.fields.values():

@@ -71,13 +71,17 @@ class AssetTable:
         self.entries = {}   # id -> (type, object path)
         self.used = set()
 
-    def resolve(self, value, asset_type, file, line, label):
+    def resolve(self, value, asset_type, file, line, label, source=None):
         """value is a name, a list of names or a map of names; empty means "no asset". Returns the same shape
-        with object paths, reporting unknown names and names of the wrong type."""
+        with object paths, reporting unknown names and names of the wrong type. source: the value as written
+        (LSeq / LMap), for the line of each item."""
+        def line_of(key):
+            return source.line_of(key) if hasattr(source, "line_of") else line
+
         if isinstance(value, list):
-            return [self.resolve(item, asset_type, file, line, label) for item in value]
+            return [self.resolve(item, asset_type, file, line_of(index), label) for index, item in enumerate(value)]
         if isinstance(value, dict):
-            return {key: self.resolve(item, asset_type, file, line, "{}.{}".format(label, key)) for key, item in value.items()}
+            return {key: self.resolve(item, asset_type, file, line_of(key), "{}.{}".format(label, key)) for key, item in value.items()}
         if not value:
             return value
 

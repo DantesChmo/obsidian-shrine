@@ -116,8 +116,8 @@ void UOSDataSubsystem::Reload()
 	{
 		UE_LOG(LogObsidian, Error, TEXT("Data: no Input section in %s, so no key is bound to anything"), *GetDataDir());
 	}
-	UE_LOG(LogObsidian, Log, TEXT("Data: %d actions, %d weapons, %d characters, %d AI profiles, %d problems"),
-		Actions.Num(), Weapons.Num(), Characters.Num(), AIProfiles.Num(), Errors.Num());
+	UE_LOG(LogObsidian, Log, TEXT("Data: %d actions, %d weapons, %d characters, %d AI profiles, %d animation sets, %d problems"),
+		Actions.Num(), Weapons.Num(), Characters.Num(), AIProfiles.Num(), AnimationSets.Num(), Errors.Num());
 
 	OnReloaded.Broadcast();
 }
@@ -128,6 +128,7 @@ void UOSDataSubsystem::Reset()
 	Weapons.Reset();
 	Characters.Reset();
 	AIProfiles.Reset();
+	AnimationSets.Reset();
 	GameDef = FOSGameDef();
 	InputDef = FOSInputDef();
 	TextsDef = FOSTextsDef();
@@ -208,6 +209,7 @@ bool UOSDataSubsystem::LoadFromJsonString(const FString& Json, const FString& So
 	for (const FOSWeaponDef& Def : File.Weapons) { AddWeapon(Def, SourceName); }
 	for (const FOSCharacterDef& Def : File.Characters) { AddCharacter(Def, SourceName); }
 	for (const FOSAIProfileDef& Def : File.AIProfiles) { AddAIProfile(Def, SourceName); }
+	for (const FOSAnimationSetDef& Def : File.AnimationSets) { AddAnimationSet(Def, SourceName); }
 	return true;
 }
 
@@ -253,6 +255,12 @@ void UOSDataSubsystem::AddAIProfile(const FOSAIProfileDef& Def, const FString& S
 {
 	FString Error;
 	if (!AddDefinition(AIProfiles, Def, TEXT("AI profile"), SourceName, Error)) { ReportLoadError(Error); }
+}
+
+void UOSDataSubsystem::AddAnimationSet(const FOSAnimationSetDef& Def, const FString& SourceName)
+{
+	FString Error;
+	if (!AddDefinition(AnimationSets, Def, TEXT("animation set"), SourceName, Error)) { ReportLoadError(Error); }
 }
 
 void UOSDataSubsystem::ReportLoadError(const FString& Message)
@@ -326,6 +334,19 @@ TArray<FString> UOSDataSubsystem::Validate() const
 		if (Def.MaxHealth <= 0.f)
 		{
 			Errors.Add(FString::Printf(TEXT("%s has MaxHealth <= 0"), *Owner));
+		}
+		if (!Def.AnimationSet.IsNone() && !AnimationSets.Contains(Def.AnimationSet))
+		{
+			Errors.Add(FString::Printf(TEXT("%s references unknown animation set '%s'"), *Owner, *Def.AnimationSet.ToString()));
+		}
+	}
+
+	for (const TPair<FName, FOSAnimationSetDef>& Pair : AnimationSets)
+	{
+		const FString Owner = FString::Printf(TEXT("animation set '%s'"), *Pair.Key.ToString());
+		for (const TPair<FName, FString>& Animation : Pair.Value.Actions)
+		{
+			CheckAction(Animation.Key, Owner);
 		}
 	}
 

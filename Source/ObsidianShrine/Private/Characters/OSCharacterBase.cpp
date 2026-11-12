@@ -1,7 +1,5 @@
 #include "Characters/OSCharacterBase.h"
 
-#include "Animation/AnimInstance.h"
-#include "Animation/AnimMontage.h"
 #include "Animation/AnimSequenceBase.h"
 #include "Combat/OSActionComponent.h"
 #include "Combat/OSCombatComponent.h"
@@ -107,6 +105,8 @@ bool AOSCharacterBase::ApplyDefinition(FName InCharacterId, bool bKeepState)
 
 	CharacterId = InCharacterId;
 	Definition = *Found;
+	const FOSAnimationSetDef* FoundSet = Data->FindAnimationSet(Definition.AnimationSet);
+	AnimationSet = FoundSet ? *FoundSet : FOSAnimationSetDef();
 	if (bKeepState)
 	{
 		Stats->UpdateFromDef(Definition);
@@ -140,7 +140,7 @@ bool AOSCharacterBase::ApplyDefinition(FName InCharacterId, bool bKeepState)
 void AOSCharacterBase::ApplyVisuals()
 {
 	bHasSkeletalMesh = false;
-	bUsesAnimInstance = false;
+	bActionAnimationPlaying = false;
 	LoopingAnimation = nullptr;
 
 	USkeletalMesh* SkeletalMesh = Definition.Mesh.IsEmpty() ? nullptr : Cast<USkeletalMesh>(FSoftObjectPath(Definition.Mesh).TryLoad());
@@ -155,17 +155,8 @@ void AOSCharacterBase::ApplyVisuals()
 		GetMesh()->SetSkeletalMeshAsset(SkeletalMesh);
 		GetMesh()->SetRelativeLocation(FVector(0.f, 0.f, -GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight()));
 		GetMesh()->SetRelativeRotation(FRotator(0.f, Definition.MeshYaw, 0.f));
-
-		UClass* AnimClass = Definition.AnimClass.IsEmpty() ? nullptr : FSoftClassPath(Definition.AnimClass).TryLoadClass<UAnimInstance>();
-		if (AnimClass)
-		{
-			bUsesAnimInstance = true;
-			GetMesh()->SetAnimInstanceClass(AnimClass);
-		}
-		else
-		{
-			GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
-		}
+		// No animation blueprint (a project rule): one animation at a time, chosen in code from the set.
+		GetMesh()->SetAnimationMode(EAnimationMode::AnimationSingleNode);
 	}
 
 	PlaceholderBody->SetVisibility(!bHasSkeletalMesh);
@@ -406,11 +397,13 @@ UAnimSequenceBase* AOSCharacterBase::LoadAnimation(const FString& Path)
 
 void AOSCharacterBase::PlayActionAnimation(const FOSActionDef& Def)
 {
+	bActionAnimationPlaying = false;
 	if (!bHasSkeletalMesh)
 	{
 		return;
 	}
-	UAnimSequenceBase* Animation = LoadAnimation(Def.Animation);
+	const FString* Path = AnimationSet.Actions.Find(Def.Id);
+	UAnimSequenceBase* Animation = Path ? LoadAnimation(*Path) : nullptr;
 	if (!Animation)
 	{
 		return;
@@ -419,43 +412,37 @@ void AOSCharacterBase::PlayActionAnimation(const FOSActionDef& Def)
 	const float Length = Animation->GetPlayLength();
 	const float Rate = (Def.bFitAnimation && !Def.IsHeld() && Length > 0.f) ? Length / Def.Duration : 1.f;
 
-	if (bUsesAnimInstance)
-	{
-		if (UAnimMontage* Montage = Cast<UAnimMontage>(Animation))
-		{
-			PlayAnimMontage(Montage, Rate);
-		}
-		else if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
-		{
-			AnimInstance->PlaySlotAnimationAsDynamicMontage(Animation, TEXT("DefaultSlot"), 0.1f, 0.1f, Rate);
-		}
-	}
-	else
-	{
-		LoopingAnimation = nullptr;
-		GetMesh()->PlayAnimation(Animation, Def.IsHeld());
-		GetMesh()->SetPlayRate(Rate);
-	}
+	LoopingAnimation = nullptr;
+	bActionAnimationPlaying = true;
+	GetMesh()->PlayAnimation(Animation, Def.IsHeld());
+	GetMesh()->SetPlayRate(Rate);
 }
 
 void AOSCharacterBase::UpdateLocomotionAnimation()
 {
-	// With an anim instance, locomotion is the animation graph's job.
-	if (bUsesAnimInstance || !IsAlive())
+	if (!IsAlive())
 	{
 		return;
 	}
-	if (Action->IsBusy() && !Action->GetCurrent().Animation.IsEmpty())
+	if (!Action->IsBusy())
+	{
+		bActionAnimationPlaying = false;
+	}
+	if (bActionAnimationPlaying)
 	{
 		return;
 	}
 
-	const bool bMoving = GetVelocity().SizeSquared2D() > FMath::Square(10.f);
-	UAnimSequenceBase* Wanted = LoadAnimation(bMoving ? Definition.MoveAnimation : Definition.IdleAnimation);
+	float Rate = 1.f;
+	const FString& Path = AnimationSet.PickLocomotion(GetVelocity().Size2D(), bSprinting, Rate);
+	UAnimSequenceBase* Wanted = LoadAnimation(Path);
 	if (Wanted && Wanted != LoopingAnimation)
 	{
 		LoopingAnimation = Wanted;
 		GetMesh()->PlayAnimation(Wanted, true);
-		GetMesh()->SetPlayRate(1.f);
+	}
+	if (Wanted)
+	{
+		GetMesh()->SetPlayRate(Rate);
 	}
 }
