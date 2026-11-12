@@ -31,19 +31,102 @@ void AOSGameMode::InitGame(const FString& MapName, const FString& Options, FStri
 void AOSGameMode::StartPlay()
 {
 	Super::StartPlay();
-	RefreshDroppedPickup();
+	if (!ResumeFromSave())
+	{
+		RefreshDroppedPickup();
+	}
+}
+
+bool AOSGameMode::ResumeFromSave()
+{
+	UOSProgressSubsystem* Progress = UOSProgressSubsystem::Get(this);
+	if (!Progress || Progress->bResumeChecked)
+	{
+		return false;
+	}
+	Progress->bResumeChecked = true;
+
+	// Only the start map continues elsewhere: opening another map directly (in the editor, or with the
+	// console command open) plays that map.
+	const FString CurrentMap = UOSProgressSubsystem::CurrentMapPath(this);
+	if (!FOSProgressState::IsSameMap(CurrentMap, UOSDataSubsystem::Settings().StartMap))
+	{
+		return false;
+	}
+	const FString SavedMap = Progress->State.RespawnMapIfElsewhere(CurrentMap);
+	if (SavedMap.IsEmpty())
+	{
+		return false;
+	}
+	UE_LOG(LogObsidian, Log, TEXT("Continuing the save on %s"), *SavedMap);
+	LeaveForMap(SavedMap);
+	return true;
 }
 
 void AOSGameMode::RestartPlayer(AController* NewPlayer)
 {
-	const UOSProgressSubsystem* Progress = UOSProgressSubsystem::Get(this);
-	const AOSCheckpoint* Checkpoint = Progress ? FindCheckpoint(Progress->State.LastCheckpoint) : nullptr;
-	if (NewPlayer && Checkpoint)
+	UOSProgressSubsystem* Progress = UOSProgressSubsystem::Get(this);
+	if (NewPlayer && Progress)
 	{
-		RestartPlayerAtTransform(NewPlayer, Checkpoint->GetRespawnTransform());
-		return;
+		// Entered through an exit: come out at the linked exit.
+		const FName Arrival = Progress->Travel.TakeArrival();
+		if (const AOSMapExit* Exit = FindExit(Arrival))
+		{
+			RestartPlayerAtTransform(NewPlayer, Exit->GetArrivalTransform());
+			return;
+		}
+		if (!Arrival.IsNone())
+		{
+			UE_LOG(LogObsidian, Error, TEXT("Arrival exit '%s' is not on this map; using the usual start"), *Arrival.ToString());
+		}
+
+		if (const AOSCheckpoint* Checkpoint = FindCheckpoint(Progress->State.LastCheckpoint))
+		{
+			RestartPlayerAtTransform(NewPlayer, Checkpoint->GetRespawnTransform());
+			return;
+		}
 	}
 	Super::RestartPlayer(NewPlayer);
+}
+
+AOSMapExit* AOSGameMode::FindExit(FName ExitId) const
+{
+	if (ExitId.IsNone())
+	{
+		return nullptr;
+	}
+	for (TActorIterator<AOSMapExit> It(GetWorld()); It; ++It)
+	{
+		if (It->ExitId == ExitId)
+		{
+			return *It;
+		}
+	}
+	return nullptr;
+}
+
+void AOSGameMode::TravelThrough(AOSMapExit* Exit, AOSPlayerCharacter* Player)
+{
+	UOSProgressSubsystem* Progress = UOSProgressSubsystem::Get(this);
+	if (!Exit || !Player || !Progress || bLeavingMap || Player->GetStats()->IsDead() || Exit->IsSealed(Progress->State))
+	{
+		return;
+	}
+	if (Exit->TargetMap.IsNone())
+	{
+		UE_LOG(LogObsidian, Error, TEXT("Exit '%s' leads nowhere (no TargetMap)"), *Exit->ExitId.ToString());
+		return;
+	}
+
+	Progress->Travel.Begin(Exit->TargetExit, Player->GetStats()->GetHealth());
+	LeaveForMap(Exit->TargetMap.ToString());
+}
+
+void AOSGameMode::LeaveForMap(const FString& MapPath)
+{
+	bLeavingMap = true;
+	GetWorldTimerManager().ClearTimer(RespawnTimer);
+	UGameplayStatics::OpenLevel(this, FName(*MapPath));
 }
 
 AOSCheckpoint* AOSGameMode::FindCheckpoint(FName CheckpointId) const
@@ -67,6 +150,7 @@ void AOSGameMode::HandlePlayerDeath(AOSPlayerCharacter* Player)
 	const FOSDeathDef& Rules = UOSDataSubsystem::Settings().Death;
 	if (UOSProgressSubsystem* Progress = UOSProgressSubsystem::Get(this))
 	{
+		Progress->Travel.Clear();
 		Progress->State.HandleDeath(Player->GetLastGroundedLocation(), UGameplayStatics::GetCurrentLevelName(this, true), Rules);
 		Progress->Save();
 	}
@@ -79,6 +163,15 @@ void AOSGameMode::HandlePlayerDeath(AOSPlayerCharacter* Player)
 
 void AOSGameMode::RespawnPlayer()
 {
+	// The last shrine is on another map: loading it respawns the player there with every enemy fresh.
+	const UOSProgressSubsystem* Progress = UOSProgressSubsystem::Get(this);
+	const FString RespawnMap = Progress ? Progress->State.RespawnMapIfElsewhere(UOSProgressSubsystem::CurrentMapPath(this)) : FString();
+	if (!RespawnMap.IsEmpty())
+	{
+		LeaveForMap(RespawnMap);
+		return;
+	}
+
 	APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
 	if (!PlayerController)
 	{
@@ -120,7 +213,7 @@ void AOSGameMode::RestAtCheckpoint(AOSCheckpoint* Checkpoint, AOSPlayerCharacter
 {
 	if (UOSProgressSubsystem* Progress = UOSProgressSubsystem::Get(this))
 	{
-		Progress->State.LastCheckpoint = Checkpoint->CheckpointId;
+		Progress->State.RestAt(Checkpoint->CheckpointId, UOSProgressSubsystem::CurrentMapPath(this));
 		Progress->Save();
 	}
 

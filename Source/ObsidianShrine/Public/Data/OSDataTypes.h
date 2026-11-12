@@ -605,6 +605,12 @@ struct FOSTextsDef
 	FString PromptPickup = TEXT("Recover lost shards");
 
 	UPROPERTY()
+	FString PromptExit = TEXT("Pass through");
+
+	UPROPERTY()
+	FString PromptExitSealed = TEXT("The way is sealed");
+
+	UPROPERTY()
 	FString Currency = TEXT("Shards: {Amount}");
 
 	UPROPERTY()

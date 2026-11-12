@@ -7,6 +7,7 @@
 #include "OSWorldActors.generated.h"
 
 class AOSEnemyCharacter;
+struct FOSProgressState;
 
 /** Shrine: resting here refills the player, respawns enemies and becomes the respawn point. */
 UCLASS()
@@ -31,6 +32,50 @@ public:
 
 	/** Where the player stands after respawning: in front of the shrine, facing it. */
 	FTransform GetRespawnTransform() const;
+
+	virtual FString GetPrompt() const override;
+	virtual void Interact(AOSPlayerCharacter* Player) override;
+};
+
+/**
+ * Passage to another map. Using it loads TargetMap and puts the player at the exit TargetExit there; the
+ * level manifests link the two (field To of an exit). Health carries over; enemies of the new map are fresh.
+ */
+UCLASS()
+class OBSIDIANSHRINE_API AOSMapExit : public AOSInteractable
+{
+	GENERATED_BODY()
+
+public:
+	AOSMapExit();
+
+	/** Unique within the game; other exits lead here by it. */
+	UPROPERTY(EditAnywhere, Category = "Obsidian")
+	FName ExitId;
+
+	/** Package path of the map this exit leads to (/Game/Maps/L_Name). Set by the level manifest. */
+	UPROPERTY(EditAnywhere, Category = "Obsidian")
+	FName TargetMap;
+
+	/** ExitId on TargetMap where the player comes out. */
+	UPROPERTY(EditAnywhere, Category = "Obsidian")
+	FName TargetExit;
+
+	/** Non-empty: the exit stays sealed until the enemy with this PersistentId is defeated. */
+	UPROPERTY(EditAnywhere, Category = "Obsidian")
+	FName RequiresDefeated;
+
+	/** How far in front of the exit a player arriving through it stands, cm. */
+	UPROPERTY(EditAnywhere, Category = "Obsidian")
+	float ArrivalDistance = 0.f;
+
+	/** How far above the exit's centre a player arriving through it stands, cm. */
+	UPROPERTY(EditAnywhere, Category = "Obsidian")
+	float ArrivalHeight = 0.f;
+
+	/** In front of the exit, facing away from it, into the level. */
+	FTransform GetArrivalTransform() const;
+	bool IsSealed(const FOSProgressState& State) const;
 
 	virtual FString GetPrompt() const override;
 	virtual void Interact(AOSPlayerCharacter* Player) override;

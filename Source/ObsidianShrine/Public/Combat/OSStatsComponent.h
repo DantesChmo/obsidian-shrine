@@ -22,6 +22,8 @@ public:
 	/** Takes the limits and rates from Def but keeps the current health, stamina and poise (clamped). */
 	void UpdateFromDef(const FOSCharacterDef& Def);
 	void RestoreAll();
+	/** Sets the health of a living character, clamped to [1, MaxHealth]. Never kills or revives. */
+	void SetHealth(float Value);
 
 	void Advance(float DeltaTime);
 

@@ -36,6 +36,14 @@ void UOSStatsComponent::RestoreAll()
 	bDead = false;
 }
 
+void UOSStatsComponent::SetHealth(float Value)
+{
+	if (!bDead)
+	{
+		Health = FMath::Clamp(Value, FMath::Min(1.f, MaxHealth), MaxHealth);
+	}
+}
+
 void UOSStatsComponent::Advance(float DeltaTime)
 {
 	if (bDead)

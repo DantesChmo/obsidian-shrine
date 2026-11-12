@@ -200,6 +200,8 @@ FOSTextsDef:
   PromptInteract: { doc: "Что предлагает объект без собственной подсказки." }
   PromptShrine: { doc: "Что предлагает святилище." }
   PromptPickup: { doc: "Что предлагают осколки, оставшиеся на месте смерти." }
+  PromptExit: { doc: "Что предлагает выход на другую карту." }
+  PromptExitSealed: { doc: "Подсказка у выхода, который ещё запечатан (не побеждён враг из `RequiresDefeated`)." }
   Currency: { doc: "Счётчик осколков. `{Amount}` — сколько их." }
   MessageDied: { doc: "Надпись при смерти игрока." }
   MessageBossDefeated: { doc: "Надпись при победе над боссом." }

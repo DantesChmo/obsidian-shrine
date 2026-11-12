@@ -38,6 +38,41 @@ void AOSCheckpoint::Interact(AOSPlayerCharacter* Player)
 	}
 }
 
+AOSMapExit::AOSMapExit()
+{
+	// A doorway slab: thin along the facing direction, 2 m wide, 3 m tall around the actor's location.
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
+	Visual->SetStaticMesh(CubeMesh.Object);
+	Visual->SetRelativeScale3D(FVector(0.3f, 2.f, 3.f));
+}
+
+FTransform AOSMapExit::GetArrivalTransform() const
+{
+	const FVector Forward = GetActorForwardVector().GetSafeNormal2D();
+	const FVector Location = GetActorLocation() + Forward * ArrivalDistance + FVector(0.f, 0.f, ArrivalHeight);
+	return FTransform(FRotator(0.f, Forward.Rotation().Yaw, 0.f), Location);
+}
+
+bool AOSMapExit::IsSealed(const FOSProgressState& State) const
+{
+	return !RequiresDefeated.IsNone() && !State.IsDefeated(RequiresDefeated);
+}
+
+FString AOSMapExit::GetPrompt() const
+{
+	const UOSProgressSubsystem* Progress = UOSProgressSubsystem::Get(this);
+	const bool bSealed = Progress && IsSealed(Progress->State);
+	return bSealed ? UOSDataSubsystem::Texts().PromptExitSealed : UOSDataSubsystem::Texts().PromptExit;
+}
+
+void AOSMapExit::Interact(AOSPlayerCharacter* Player)
+{
+	if (AOSGameMode* GameMode = GetWorld()->GetAuthGameMode<AOSGameMode>())
+	{
+		GameMode->TravelThrough(this, Player);
+	}
+}
+
 AOSCurrencyPickup::AOSCurrencyPickup()
 {
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(TEXT("/Engine/BasicShapes/Sphere.Sphere"));

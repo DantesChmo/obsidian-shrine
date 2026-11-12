@@ -6,6 +6,8 @@
     "PromptInteract": "Interact",
     "PromptShrine": "Rest at shrine",
     "PromptPickup": "Recover lost shards",
+    "PromptExit": "Pass through",
+    "PromptExitSealed": "The way is sealed",
     "Currency": "Shards: {Amount}",
     "MessageDied": "YOU DIED",
     "MessageBossDefeated": "ENEMY FELLED",

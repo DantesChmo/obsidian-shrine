@@ -4,7 +4,9 @@
 #include "Characters/OSPlayerController.h"
 #include "Combat/OSActionComponent.h"
 #include "Combat/OSLockOnComponent.h"
+#include "Combat/OSStatsComponent.h"
 #include "Core/OSGameMode.h"
+#include "Core/OSProgress.h"
 #include "Data/OSDataSubsystem.h"
 #include "Engine/World.h"
 #include "EnhancedInputComponent.h"
@@ -34,6 +36,14 @@ void AOSPlayerCharacter::BeginPlay()
 	CharacterId = UOSDataSubsystem::Settings().PlayerCharacter;
 	ApplyCameraSettings();
 	Super::BeginPlay();
+
+	// Came through an exit: keep the health from the previous map instead of a free refill.
+	float CarriedHealth = 0.f;
+	UOSProgressSubsystem* Progress = UOSProgressSubsystem::Get(this);
+	if (Progress && Progress->Travel.TakeHealth(CarriedHealth))
+	{
+		GetStats()->SetHealth(CarriedHealth);
+	}
 }
 
 void AOSPlayerCharacter::HandleDataReloaded()

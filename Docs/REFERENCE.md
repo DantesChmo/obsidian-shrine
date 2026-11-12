@@ -370,6 +370,8 @@
 | `PromptInteract` | текст | `Interact` |  | Что предлагает объект без собственной подсказки. |
 | `PromptShrine` | текст | `Rest at shrine` |  | Что предлагает святилище. |
 | `PromptPickup` | текст | `Recover lost shards` |  | Что предлагают осколки, оставшиеся на месте смерти. |
+| `PromptExit` | текст | `Pass through` |  | Что предлагает выход на другую карту. |
+| `PromptExitSealed` | текст | `The way is sealed` |  | Подсказка у выхода, который ещё запечатан (не побеждён враг из `RequiresDefeated`). |
 | `Currency` | текст | `Shards: {Amount}` |  | Счётчик осколков. `{Amount}` — сколько их. |
 | `MessageDied` | текст | `YOU DIED` |  | Надпись при смерти игрока. |
 | `MessageBossDefeated` | текст | `ENEMY FELLED` |  | Надпись при победе над боссом. |

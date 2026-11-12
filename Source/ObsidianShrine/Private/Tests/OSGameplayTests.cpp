@@ -11,6 +11,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/WorldSettings.h"
 #include "Kismet/GameplayStatics.h"
+#include "World/OSWorldActors.h"
 
 // ---------------------------------------------------------------------------------------------- AI
 
@@ -161,6 +162,7 @@ bool FOSProgressSaveTest::RunTest(const FString& Parameters)
 	UOSSaveGame* Saved = NewObject<UOSSaveGame>();
 	Saved->State.Currency = 777;
 	Saved->State.LastCheckpoint = TEXT("shrine_x");
+	Saved->State.LastCheckpointMap = TEXT("/Game/Maps/L_Test");
 	Saved->State.DroppedCurrency = 55;
 	Saved->State.DroppedLocation = FVector(1.f, 2.f, 3.f);
 	Saved->State.DroppedMap = TEXT("L_Test");
@@ -177,10 +179,81 @@ bool FOSProgressSaveTest::RunTest(const FString& Parameters)
 	}
 	TestEqual(TEXT("Currency"), Loaded->State.Currency, 777);
 	TestEqual(TEXT("LastCheckpoint"), Loaded->State.LastCheckpoint, FName(TEXT("shrine_x")));
+	TestEqual(TEXT("LastCheckpointMap"), Loaded->State.LastCheckpointMap, FString(TEXT("/Game/Maps/L_Test")));
 	TestEqual(TEXT("DroppedCurrency"), Loaded->State.DroppedCurrency, 55);
 	TestEqual(TEXT("DroppedLocation"), Loaded->State.DroppedLocation, FVector(1.f, 2.f, 3.f));
 	TestEqual(TEXT("DroppedMap"), Loaded->State.DroppedMap, FString(TEXT("L_Test")));
 	TestTrue(TEXT("Defeated"), Loaded->State.IsDefeated(TEXT("boss_a")));
+	return true;
+}
+
+// ---------------------------------------------------------------------------------------------- Travel
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOSTravelRespawnMapTest, "ObsidianShrine.Travel.RespawnMapFollowsLastShrine", OS_TEST_FLAGS)
+
+bool FOSTravelRespawnMapTest::RunTest(const FString& Parameters)
+{
+	TestTrue(TEXT("a path and its short name are the same map"), FOSProgressState::IsSameMap(TEXT("/Game/Maps/L_A"), TEXT("L_A")));
+	TestTrue(TEXT("map names ignore case"), FOSProgressState::IsSameMap(TEXT("/Game/Maps/L_A"), TEXT("/Game/Maps/l_a")));
+	TestFalse(TEXT("different maps"), FOSProgressState::IsSameMap(TEXT("/Game/Maps/L_A"), TEXT("/Game/Maps/L_B")));
+	TestFalse(TEXT("no map is no map"), FOSProgressState::IsSameMap(TEXT(""), TEXT("")));
+
+	FOSProgressState State;
+	TestTrue(TEXT("never rested: respawn where you are"), State.RespawnMapIfElsewhere(TEXT("/Game/Maps/L_A")).IsEmpty());
+
+	State.RestAt(TEXT("shrine_b"), TEXT("/Game/Maps/L_B"));
+	TestEqual(TEXT("checkpoint stored"), State.LastCheckpoint, FName(TEXT("shrine_b")));
+	TestEqual(TEXT("dying on another map goes to the shrine's map"),
+		State.RespawnMapIfElsewhere(TEXT("/Game/Maps/L_A")), FString(TEXT("/Game/Maps/L_B")));
+	TestTrue(TEXT("dying on the shrine's map stays"), State.RespawnMapIfElsewhere(TEXT("/Game/Maps/L_B")).IsEmpty());
+
+	// A save written before map travel existed has a checkpoint but no map.
+	FOSProgressState OldSave;
+	OldSave.LastCheckpoint = TEXT("shrine_b");
+	TestTrue(TEXT("an old save never travels"), OldSave.RespawnMapIfElsewhere(TEXT("/Game/Maps/L_A")).IsEmpty());
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOSTravelStateTest, "ObsidianShrine.Travel.StateIsTakenOnce", OS_TEST_FLAGS)
+
+bool FOSTravelStateTest::RunTest(const FString& Parameters)
+{
+	FOSTravelState Travel;
+	float Health = -1.f;
+	TestTrue(TEXT("no travel: no arrival"), Travel.TakeArrival().IsNone());
+	TestFalse(TEXT("no travel: no health"), Travel.TakeHealth(Health));
+
+	Travel.Begin(TEXT("exit_b"), 42.f);
+	TestEqual(TEXT("arrival"), Travel.TakeArrival(), FName(TEXT("exit_b")));
+	TestTrue(TEXT("arrival is taken once"), Travel.TakeArrival().IsNone());
+	TestTrue(TEXT("health carried"), Travel.TakeHealth(Health));
+	TestEqual(TEXT("carried amount"), Health, 42.f);
+	TestFalse(TEXT("health is taken once"), Travel.TakeHealth(Health));
+
+	Travel.Begin(TEXT("exit_c"), 10.f);
+	Travel.Clear();
+	TestTrue(TEXT("death clears the arrival"), Travel.TakeArrival().IsNone());
+	TestFalse(TEXT("death clears the health"), Travel.TakeHealth(Health));
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOSTravelHealthTest, "ObsidianShrine.Travel.CarriedHealthNeverKills", OS_TEST_FLAGS)
+
+bool FOSTravelHealthTest::RunTest(const FString& Parameters)
+{
+	FOSTestRig Rig(100.f);
+	Rig.Stats->SetHealth(37.f);
+	TestEqual(TEXT("health set"), Rig.Stats->GetHealth(), 37.f);
+	Rig.Stats->SetHealth(500.f);
+	TestEqual(TEXT("clamped to max"), Rig.Stats->GetHealth(), 100.f);
+	Rig.Stats->SetHealth(0.f);
+	TestEqual(TEXT("never below 1"), Rig.Stats->GetHealth(), 1.f);
+	TestFalse(TEXT("not killed"), Rig.Stats->IsDead());
+
+	Rig.Stats->Kill();
+	Rig.Stats->SetHealth(50.f);
+	TestTrue(TEXT("not revived"), Rig.Stats->IsDead());
+	TestEqual(TEXT("dead stays at zero"), Rig.Stats->GetHealth(), 0.f);
 	return true;
 }
 
@@ -353,6 +426,32 @@ bool FOSWorldReapplyTest::RunTest(const FString& Parameters)
 	AddExpectedError(TEXT("unknown character definition"), EAutomationExpectedErrorFlags::Contains, 1);
 	TestFalse(TEXT("an unknown definition is refused"), Character->ApplyDefinition(TEXT("test_reapply_missing"), true));
 	TestEqual(TEXT("and changes nothing"), Character->GetStats()->GetMaxHealth(), 100.f);
+	return true;
+}
+
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOSWorldMapExitTest, "ObsidianShrine.World.MapExitArrivalAndSeal", OS_TEST_FLAGS)
+
+bool FOSWorldMapExitTest::RunTest(const FString& Parameters)
+{
+	FOSTestWorld TestWorld;
+	AOSMapExit* Exit = TestWorld.World->SpawnActor<AOSMapExit>(AOSMapExit::StaticClass(), FVector(100.f, 200.f, 150.f), FRotator(0.f, 90.f, 0.f));
+	if (!TestNotNull(TEXT("exit spawned"), Exit))
+	{
+		return false;
+	}
+	Exit->ArrivalDistance = 200.f;
+	Exit->ArrivalHeight = 10.f;
+
+	const FTransform Arrival = Exit->GetArrivalTransform();
+	TestTrue(TEXT("arrive in front of the exit"), Arrival.GetLocation().Equals(FVector(100.f, 400.f, 160.f), 0.1f));
+	TestTrue(TEXT("facing away from the exit"), FMath::IsNearlyEqual(Arrival.Rotator().Yaw, 90.f, 0.1f));
+
+	FOSProgressState State;
+	TestFalse(TEXT("an exit without a requirement is open"), Exit->IsSealed(State));
+	Exit->RequiresDefeated = TEXT("test_boss");
+	TestTrue(TEXT("sealed while the boss lives"), Exit->IsSealed(State));
+	State.MarkDefeated(TEXT("test_boss"));
+	TestFalse(TEXT("open once the boss is defeated"), Exit->IsSealed(State));
 	return true;
 }
 
