@@ -30,3 +30,7 @@ Enemies:
 
   # Босс в дальнем углу, в стороне от боя с обычными врагами.
   - { Character: shrine_warden, Name: Boss_ShrineWarden, At: [-2600, -2600, 200], Yaw: 45, PersistentId: sandbox_shrine_warden }
+
+Exits:
+  # Ворота в Пепельный склеп у северного края, запечатаны, пока жив Страж святилища.
+  - { Id: sandbox_crypt_gate, At: [2500, 3900, 150], Yaw: -90, To: crypt_sandbox_gate, RequiresDefeated: sandbox_shrine_warden }

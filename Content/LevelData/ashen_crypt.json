@@ -456,6 +456,27 @@
         180,
         0
       ]
+    },
+    {
+      "Kind": "Exit",
+      "Label": "Exit_crypt_sandbox_gate",
+      "Id": "crypt_sandbox_gate",
+      "TargetMap": "/Game/Maps/L_Sandbox",
+      "TargetExit": "sandbox_crypt_gate",
+      "RequiresDefeated": "",
+      "Location": [
+        30,
+        -500,
+        150
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "InteractRadius": 0.0,
+      "ArrivalDistance": 200.0,
+      "ArrivalHeight": 0.0
     }
   ]
 }

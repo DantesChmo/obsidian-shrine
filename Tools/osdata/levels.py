@@ -2,7 +2,7 @@
 Content/Python/os_content/level_builder.py.
 
 A manifest deliberately knows only the handful of things a level is made of here: boxes, a player start,
-shrines, enemies and a lighting preset. No arbitrary actor classes, no per-light settings, no loops or
+shrines, enemies, exits to other maps and a lighting preset. No arbitrary actor classes, no per-light settings, no loops or
 inheritance; a mechanic gets a manifest field when the game gets the code for it.
 """
 
@@ -52,13 +52,24 @@ STRUCTS = [
             Field("Yaw", _FLOAT, default=0.0),
             Field("PersistentId", _NAME),
             Field("Name", _NAME)),
+    _struct("LevelExit",
+            Field("Id", _NAME, required=True),
+            Field("At", _VECTOR, required=True),
+            Field("Yaw", _FLOAT, default=0.0),
+            Field("To", _NAME, required=True),
+            Field("RequiresDefeated", _NAME),
+            Field("InteractRadius", _FLOAT, default=0.0),
+            Field("ArrivalDistance", _FLOAT, default=200.0),
+            Field("ArrivalHeight", _FLOAT, default=0.0),
+            Field("Name", _NAME)),
     _struct("Level",
             Field("Map", Type("string"), required=True),
             Field("Lighting", _NAME, required=True),
             Field("PlayerStart", Type("struct", ref="LevelStart"), required=True),
             Field("Blocks", Type("array", item=Type("struct", ref="LevelBlock"))),
             Field("Shrines", Type("array", item=Type("struct", ref="LevelShrine"))),
-            Field("Enemies", Type("array", item=Type("struct", ref="LevelEnemy")))),
+            Field("Enemies", Type("array", item=Type("struct", ref="LevelEnemy"))),
+            Field("Exits", Type("array", item=Type("struct", ref="LevelExit")))),
 ]
 
 STRUCTS_BY_NAME = {struct.name: struct for struct in STRUCTS}
@@ -76,6 +87,9 @@ REFERENCE_SECTIONS = [
      "Точка отдыха и возрождения."),
     ("Враг на уровне", "LevelEnemy", "внутри `Enemies` уровня",
      "Ставит на уровень персонажа, описанного в `Game/data`."),
+    ("Выход", "LevelExit", "внутри `Exits` уровня",
+     "Проход на другую карту: игрок подходит, нажимает взаимодействие и появляется у выхода `To` на той карте. "
+     "Здоровье сохраняется, враги новой карты — на своих местах."),
     ("Освещение", "LightingPreset", "`Game/lighting.yaml`, секция `Presets`",
      "Готовые наборы освещения; уровень выбирает один по имени."),
 ]
@@ -129,8 +143,11 @@ def _rotation(yaw):
     return [0, yaw, 0]
 
 
-def _resolve(level, source, path, presets, characters, seen, problems):
-    """Checks one converted level against everything else and flattens it to a spawn list."""
+def _resolve(level, source, path, presets, characters, seen, links, problems):
+    """Checks one converted level against everything else and flattens it to a spawn list.
+
+    Exits point at exits of other levels, which may not be read yet: they are collected in `links` and
+    resolved by _link_exits once every level is in."""
 
     def report(line, message):
         problems.append(Problem(path, line, message))
@@ -212,7 +229,39 @@ def _resolve(level, source, path, presets, characters, seen, problems):
              "Character": enemy["Character"], "PersistentId": persistent_id,
              "Location": enemy["At"], "Rotation": _rotation(enemy.get("Yaw", 0))}, line)
 
+    exit_defaults = {field.name: field.default for field in STRUCTS_BY_NAME["LevelExit"].fields.values()}
+    exits = source.get("Exits") if isinstance(source.get("Exits"), LSeq) else None
+    for index, exit_ in enumerate(level.get("Exits", [])):
+        line = exits.line_of(index)
+        if not all(key in exit_ for key in ("Id", "At", "To")):
+            continue
+        claim("exit", exit_["Id"], line)
+        spawn = {"Kind": "Exit", "Label": exit_.get("Name", "Exit_{}".format(exit_["Id"])), "Id": exit_["Id"],
+                 "TargetMap": "", "TargetExit": exit_["To"], "RequiresDefeated": exit_.get("RequiresDefeated", ""),
+                 "Location": exit_["At"], "Rotation": _rotation(exit_.get("Yaw", 0)),
+                 "InteractRadius": exit_.get("InteractRadius", exit_defaults["InteractRadius"]),
+                 "ArrivalDistance": exit_.get("ArrivalDistance", exit_defaults["ArrivalDistance"]),
+                 "ArrivalHeight": exit_.get("ArrivalHeight", exit_defaults["ArrivalHeight"])}
+        add(spawn, line)
+        links.append((spawn, map_path, path, line))
+
     return {"Map": map_path, "Lighting": presets.get(lighting, {}), "Spawns": spawns}
+
+
+def _link_exits(links, seen, problems):
+    """Fills in each exit's TargetMap from the exit it leads to, now that every level is known."""
+    exit_maps = {spawn["Id"]: own_map for spawn, own_map, _, _ in links}
+    for spawn, own_map, path, line in links:
+        target = spawn["TargetExit"]
+        if target not in exit_maps:
+            problems.append(Problem(path, line, "exit '{}' leads to exit '{}', which no level in Game/levels has".format(spawn["Id"], target)))
+        elif exit_maps[target] == own_map:
+            problems.append(Problem(path, line, "exit '{}' leads to exit '{}' on the same map; exits connect different maps".format(spawn["Id"], target)))
+        else:
+            spawn["TargetMap"] = exit_maps[target]
+        required = spawn["RequiresDefeated"]
+        if required and ("PersistentId", required) not in seen:
+            problems.append(Problem(path, line, "exit '{}' requires defeating '{}', but no enemy in any level has that PersistentId".format(spawn["Id"], required)))
 
 
 def build(root, level_files, build_state):
@@ -224,6 +273,7 @@ def build(root, level_files, build_state):
 
     resolved = {}
     seen = {}
+    links = []
     for path in level_files:
         try:
             document = load_file(os.path.join(root, path), path)
@@ -232,5 +282,6 @@ def build(root, level_files, build_state):
             continue
         level = checker.convert_struct(document, "Level", path, 1, "level")
         if isinstance(document, LMap):
-            resolved[path] = _resolve(level, document, path, presets, characters, seen, problems)
+            resolved[path] = _resolve(level, document, path, presets, characters, seen, links, problems)
+    _link_exits(links, seen, problems)
     return resolved

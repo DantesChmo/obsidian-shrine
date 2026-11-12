@@ -44,3 +44,7 @@ Enemies:
   - { Character: crypt_sentinel, At: [3300, -300, 120], Yaw: 180 }
 
   - { Character: ashen_knight, At: [6200, 0, 150], Yaw: 180, PersistentId: crypt_ashen_knight }
+
+Exits:
+  # Обратно в песочницу: в задней стене зала, левее входного святилища.
+  - { Id: crypt_sandbox_gate, At: [30, -500, 150], Yaw: 0, To: sandbox_crypt_gate }

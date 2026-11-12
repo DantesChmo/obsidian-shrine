@@ -124,6 +124,59 @@ class Validation(LevelCase):
         self.assertProblem("Game/levels/test.yaml:9", "no AIProfile")
 
 
+OTHER_LEVEL = """
+Map: /Game/Maps/L_Other
+Lighting: day
+PlayerStart: { At: [0, 0, 100] }
+Exits:
+  - { Id: other_gate, At: [0, 500, 150], To: test_gate }
+"""
+
+TEST_EXIT = """Exits:
+  - { Id: test_gate, At: [0, -900, 150], Yaw: 90, To: other_gate }
+"""
+
+
+class Exits(LevelCase):
+    def test_exit_gets_the_map_of_the_exit_it_leads_to(self):
+        self.put("Game/levels/test.yaml", LEVEL + TEST_EXIT)
+        self.put("Game/levels/other.yaml", OTHER_LEVEL)
+        self.assertClean()
+        exit_ = self.level()["Spawns"][-1]
+        self.assertEqual(exit_["Kind"], "Exit")
+        self.assertEqual(exit_["Label"], "Exit_test_gate")
+        self.assertEqual(exit_["TargetMap"], "/Game/Maps/L_Other")
+        self.assertEqual(exit_["TargetExit"], "other_gate")
+        self.assertEqual(exit_["Rotation"], [0, 90, 0])
+        self.assertEqual((exit_["ArrivalDistance"], exit_["ArrivalHeight"], exit_["RequiresDefeated"]), (200.0, 0.0, ""))
+        self.assertEqual(self.level("other")["Spawns"][-1]["TargetMap"], "/Game/Maps/L_Test")
+
+    def test_exit_to_nowhere(self):
+        self.put("Game/levels/test.yaml", LEVEL + TEST_EXIT)
+        self.assertProblem("Game/levels/test.yaml:11", "exit 'test_gate'", "'other_gate'", "no level")
+
+    def test_exit_to_the_same_map(self):
+        self.put("Game/levels/test.yaml", LEVEL + TEST_EXIT + "  - { Id: other_gate, At: [0, 900, 150], To: test_gate }\n")
+        found = self.problems()
+        self.assertEqual(len([text for text in found if "same map" in text]), 2, found)
+
+    def test_exit_id_must_be_unique_across_levels(self):
+        self.put("Game/levels/test.yaml", LEVEL + TEST_EXIT)
+        self.put("Game/levels/other.yaml", OTHER_LEVEL.replace("Id: other_gate", "Id: test_gate"))
+        self.assertTrue(any("exit 'test_gate' is already used" in text for text in self.problems()), self.problems())
+
+    def test_seal_needs_a_known_persistent_id(self):
+        self.put("Game/levels/test.yaml", LEVEL + TEST_EXIT.replace("To: other_gate", "To: other_gate, RequiresDefeated: nobody"))
+        self.put("Game/levels/other.yaml", OTHER_LEVEL)
+        self.assertProblem("Game/levels/test.yaml:11", "requires defeating 'nobody'")
+
+    def test_seal_by_a_persistent_enemy_of_another_level(self):
+        self.put("Game/levels/test.yaml", LEVEL + TEST_EXIT.replace("To: other_gate", "To: other_gate, RequiresDefeated: the_one"))
+        self.put("Game/levels/other.yaml", OTHER_LEVEL + "Enemies:\n  - { Character: grunt, At: [0, 0, 100], PersistentId: the_one }\n")
+        self.assertClean()
+        self.assertEqual(self.level()["Spawns"][-1]["RequiresDefeated"], "the_one")
+
+
 class Recorder:
     """Stands in for os_content.level_utils and records every placement call in a comparable form."""
 
@@ -161,6 +214,11 @@ class Recorder:
         return self._record("shrine", checkpoint_id, label, tuple(location), tuple(rotation),
                             interact_radius, respawn_distance, respawn_height)
 
+    def spawn_map_exit(self, exit_id, label, location, rotation=(0.0, 0.0, 0.0), target_map="", target_exit="",
+                       requires_defeated=None, interact_radius=0.0, arrival_distance=200.0, arrival_height=0.0):
+        return self._record("exit", exit_id, label, tuple(location), tuple(rotation), target_map, target_exit,
+                            requires_defeated, interact_radius, arrival_distance, arrival_height)
+
     def follow_ups(self):
         """What the builder did to each spawned actor afterwards (mobility, light settings)."""
         return [actor.mock_calls for actor in self.actors]
@@ -197,6 +255,8 @@ class BuilderMatchesHandWrittenScript(unittest.TestCase):
     def test_sandbox_manifest_places_the_same_things_as_the_script(self):
         with open(os.path.join(REPO, "Content", "LevelData", "sandbox.json"), encoding="utf-8") as handle:
             level = json.load(handle)
+        # Exits came after the old script; everything it knew must still be placed the same way.
+        level["Spawns"] = [spawn for spawn in level["Spawns"] if spawn["Kind"] != "Exit"]
 
         scripted = self._run("os_content.sandbox_level", lambda module: module.build())
         from_manifest = self._run("os_content.level_builder", lambda module: module.build_level(level))
@@ -204,6 +264,16 @@ class BuilderMatchesHandWrittenScript(unittest.TestCase):
         self.assertEqual(len(scripted.calls), 19, "the reference script itself changed")
         self.assertEqual(from_manifest.calls, scripted.calls)
         self.assertEqual(from_manifest.follow_ups(), scripted.follow_ups())
+
+    def test_exit_is_placed_with_its_link(self):
+        level = {"Map": "/Game/Maps/L_X", "Lighting": {}, "Spawns": [{
+            "Kind": "Exit", "Label": "Exit_x_gate", "Id": "x_gate", "TargetMap": "/Game/Maps/L_Y", "TargetExit": "y_gate",
+            "RequiresDefeated": "", "Location": [1, 2, 150], "Rotation": [0, 90, 0],
+            "InteractRadius": 0.0, "ArrivalDistance": 200.0, "ArrivalHeight": 0.0}]}
+        recorder = self._run("os_content.level_builder", lambda module: module.build_level(level))
+        exits = [call for call in recorder.calls if call[0] == "exit"]
+        self.assertEqual(exits, [("exit", "x_gate", "Exit_x_gate", (1, 2, 150), (0, 90, 0), "/Game/Maps/L_Y", "y_gate",
+                                  None, 0.0, 200.0, 0.0)])
 
     def test_unknown_spawn_kind_is_an_error(self):
         level = {"Map": "/Game/Maps/L_X", "Lighting": {}, "Spawns": [{"Kind": "Door", "Label": "D"}]}

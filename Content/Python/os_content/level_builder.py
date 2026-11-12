@@ -59,11 +59,20 @@ def _spawn_enemy(spawn):
         persistent_id=spawn.get("PersistentId") or None)
 
 
+def _spawn_exit(spawn):
+    level_utils.spawn_map_exit(
+        spawn["Id"], spawn["Label"], location=tuple(spawn["Location"]), rotation=tuple(spawn["Rotation"]),
+        target_map=spawn["TargetMap"], target_exit=spawn["TargetExit"],
+        requires_defeated=spawn.get("RequiresDefeated") or None, interact_radius=spawn["InteractRadius"],
+        arrival_distance=spawn["ArrivalDistance"], arrival_height=spawn["ArrivalHeight"])
+
+
 _SPAWNERS = {
     "Block": _spawn_block,
     "PlayerStart": _spawn_player_start,
     "Shrine": _spawn_shrine,
     "Enemy": _spawn_enemy,
+    "Exit": _spawn_exit,
 }
 
 

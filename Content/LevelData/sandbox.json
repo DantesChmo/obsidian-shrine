@@ -219,6 +219,27 @@
         45,
         0
       ]
+    },
+    {
+      "Kind": "Exit",
+      "Label": "Exit_sandbox_crypt_gate",
+      "Id": "sandbox_crypt_gate",
+      "TargetMap": "/Game/Maps/L_AshenCrypt",
+      "TargetExit": "crypt_sandbox_gate",
+      "RequiresDefeated": "sandbox_shrine_warden",
+      "Location": [
+        2500,
+        3900,
+        150
+      ],
+      "Rotation": [
+        0,
+        -90,
+        0
+      ],
+      "InteractRadius": 0.0,
+      "ArrivalDistance": 200.0,
+      "ArrivalHeight": 0.0
     }
   ]
 }

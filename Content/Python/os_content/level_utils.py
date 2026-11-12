@@ -96,6 +96,23 @@ def spawn_checkpoint(checkpoint_id, label, location, rotation=(0.0, 0.0, 0.0),
     })
 
 
+def spawn_map_exit(exit_id, label, location, rotation=(0.0, 0.0, 0.0), target_map="", target_exit="",
+                   requires_defeated=None, interact_radius=0.0, arrival_distance=200.0, arrival_height=0.0):
+    """Places a passage to another map. A player using it comes out at the exit target_exit on target_map
+    (a package path, /Game/Maps/L_Name). requires_defeated: PersistentId that keeps it sealed until killed."""
+    properties = {
+        "exit_id": exit_id,
+        "target_map": target_map,
+        "target_exit": target_exit,
+        "interact_radius": float(interact_radius),
+        "arrival_distance": float(arrival_distance),
+        "arrival_height": float(arrival_height),
+    }
+    if requires_defeated:
+        properties["requires_defeated"] = requires_defeated
+    return spawn_game_actor("OSMapExit", label, location, rotation, properties)
+
+
 def save_current_level():
     if not _level_subsystem().save_current_level():
         raise RuntimeError("Failed to save current level")
