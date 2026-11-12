@@ -14,10 +14,13 @@ import traceback
 
 import unreal
 
-from os_content import level_builder
+from os_content import asset_inventory, cook_label, level_builder
 
+# A builder may return {"notes": [...]}: things to know that are not failures (shown in the summary).
 BUILDERS = [
     ("levels", level_builder.build_all),
+    ("cook_label", cook_label.build),
+    ("asset_inventory", asset_inventory.build),
 ]
 
 
@@ -32,8 +35,11 @@ def main():
     status = {"ok": True, "builders": []}
     for name, builder in BUILDERS:
         try:
-            builder()
-            status["builders"].append({"name": name, "ok": True})
+            result = builder()
+            entry = {"name": name, "ok": True}
+            if isinstance(result, dict):
+                entry.update(result)
+            status["builders"].append(entry)
         except Exception:
             error = traceback.format_exc()
             unreal.log_error("os_content: builder '{}' failed:\n{}".format(name, error))
