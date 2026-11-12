@@ -1,0 +1,455 @@
+{
+  "_generated": "from Game/levels/ashen_crypt.yaml by Tools/build_data.py - edit the YAML, not this file",
+  "Map": "/Game/Maps/L_AshenCrypt",
+  "Lighting": {
+    "SunPitch": -12,
+    "SunYaw": 200,
+    "Fog": true
+  },
+  "Spawns": [
+    {
+      "Kind": "Block",
+      "Label": "HallFloor",
+      "Location": [
+        2000,
+        0,
+        -50
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        40.0,
+        16.0,
+        1.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "HallWallLeft",
+      "Location": [
+        2000,
+        -850,
+        300
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        40.0,
+        1.0,
+        6.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "HallWallRight",
+      "Location": [
+        2000,
+        850,
+        300
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        40.0,
+        1.0,
+        6.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "HallWallBack",
+      "Location": [
+        -50,
+        0,
+        300
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        1.0,
+        18.0,
+        6.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "HallPillar_1L",
+      "Location": [
+        1000,
+        -500,
+        300
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        1.5,
+        1.5,
+        6.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "HallPillar_1R",
+      "Location": [
+        1000,
+        500,
+        300
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        1.5,
+        1.5,
+        6.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "HallPillar_2L",
+      "Location": [
+        2000,
+        -500,
+        300
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        1.5,
+        1.5,
+        6.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "HallPillar_2R",
+      "Location": [
+        2000,
+        500,
+        300
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        1.5,
+        1.5,
+        6.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "HallPillar_3L",
+      "Location": [
+        3000,
+        -500,
+        300
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        1.5,
+        1.5,
+        6.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "HallPillar_3R",
+      "Location": [
+        3000,
+        500,
+        300
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        1.5,
+        1.5,
+        6.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "ArenaFloor",
+      "Location": [
+        5500,
+        0,
+        -50
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        30.0,
+        30.0,
+        1.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "ArenaWallLeft",
+      "Location": [
+        5500,
+        -1550,
+        300
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        30.0,
+        1.0,
+        6.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "ArenaWallRight",
+      "Location": [
+        5500,
+        1550,
+        300
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        30.0,
+        1.0,
+        6.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "ArenaWallFar",
+      "Location": [
+        7050,
+        0,
+        300
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        1.0,
+        32.0,
+        6.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "ArenaWallNearLeft",
+      "Location": [
+        4000,
+        -1175,
+        300
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        1.0,
+        6.5,
+        6.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "ArenaWallNearRight",
+      "Location": [
+        4000,
+        1175,
+        300
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        1.0,
+        6.5,
+        6.0
+      ]
+    },
+    {
+      "Kind": "PlayerStart",
+      "Label": "PlayerStart",
+      "Location": [
+        300,
+        0,
+        100
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "Kind": "Shrine",
+      "Label": "Shrine_crypt_entrance",
+      "Id": "crypt_entrance",
+      "Location": [
+        120,
+        0,
+        80
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "Kind": "Shrine",
+      "Label": "Shrine_crypt_antechamber",
+      "Id": "crypt_antechamber",
+      "Location": [
+        3750,
+        600,
+        80
+      ],
+      "Rotation": [
+        0,
+        180,
+        0
+      ]
+    },
+    {
+      "Kind": "Enemy",
+      "Label": "Enemy_husk_1",
+      "Character": "husk",
+      "PersistentId": "",
+      "Location": [
+        1200,
+        300,
+        100
+      ],
+      "Rotation": [
+        0,
+        180,
+        0
+      ]
+    },
+    {
+      "Kind": "Enemy",
+      "Label": "Enemy_husk_2",
+      "Character": "husk",
+      "PersistentId": "",
+      "Location": [
+        1500,
+        -350,
+        100
+      ],
+      "Rotation": [
+        0,
+        180,
+        0
+      ]
+    },
+    {
+      "Kind": "Enemy",
+      "Label": "Enemy_crypt_sentinel_3",
+      "Character": "crypt_sentinel",
+      "PersistentId": "",
+      "Location": [
+        2400,
+        0,
+        120
+      ],
+      "Rotation": [
+        0,
+        180,
+        0
+      ]
+    },
+    {
+      "Kind": "Enemy",
+      "Label": "Enemy_husk_4",
+      "Character": "husk",
+      "PersistentId": "",
+      "Location": [
+        3000,
+        300,
+        100
+      ],
+      "Rotation": [
+        0,
+        180,
+        0
+      ]
+    },
+    {
+      "Kind": "Enemy",
+      "Label": "Enemy_crypt_sentinel_5",
+      "Character": "crypt_sentinel",
+      "PersistentId": "",
+      "Location": [
+        3300,
+        -300,
+        120
+      ],
+      "Rotation": [
+        0,
+        180,
+        0
+      ]
+    },
+    {
+      "Kind": "Enemy",
+      "Label": "Enemy_ashen_knight_6",
+      "Character": "ashen_knight",
+      "PersistentId": "crypt_ashen_knight",
+      "Location": [
+        6200,
+        0,
+        150
+      ],
+      "Rotation": [
+        0,
+        180,
+        0
+      ]
+    }
+  ]
+}

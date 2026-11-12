@@ -6,3 +6,9 @@ Presets:
     SunPitch: -40
     SunYaw: 30
     Fog: true
+
+  # Низкое закатное солнце и туман — для подземелий и руин.
+  - Id: crypt_dusk
+    SunPitch: -12
+    SunYaw: 200
+    Fog: true

@@ -1,0 +1,46 @@
+# Пепельный склеп: длинный зал с колоннами, за ним квадратная арена босса.
+# Зал идёт вдоль +x от 0 до 4000, арена — от 4000 до 7000.
+# Справочник всех полей: Docs/REFERENCE.md
+
+Map: /Game/Maps/L_AshenCrypt
+Lighting: crypt_dusk
+
+PlayerStart: { At: [300, 0, 100], Yaw: 0 }
+
+Blocks:
+  # Зал 40 × 16 метров.
+  - { Name: HallFloor, At: [2000, 0, -50], Size: [4000, 1600, 100] }
+  - { Name: HallWallLeft, At: [2000, -850, 300], Size: [4000, 100, 600] }
+  - { Name: HallWallRight, At: [2000, 850, 300], Size: [4000, 100, 600] }
+  - { Name: HallWallBack, At: [-50, 0, 300], Size: [100, 1800, 600] }
+
+  # Колонны парами: за ними можно прятаться от выпадов.
+  - { Name: HallPillar_1L, At: [1000, -500, 300], Size: [150, 150, 600] }
+  - { Name: HallPillar_1R, At: [1000, 500, 300], Size: [150, 150, 600] }
+  - { Name: HallPillar_2L, At: [2000, -500, 300], Size: [150, 150, 600] }
+  - { Name: HallPillar_2R, At: [2000, 500, 300], Size: [150, 150, 600] }
+  - { Name: HallPillar_3L, At: [3000, -500, 300], Size: [150, 150, 600] }
+  - { Name: HallPillar_3R, At: [3000, 500, 300], Size: [150, 150, 600] }
+
+  # Арена босса 30 × 30 метров; вход — проём во всю ширину зала.
+  - { Name: ArenaFloor, At: [5500, 0, -50], Size: [3000, 3000, 100] }
+  - { Name: ArenaWallLeft, At: [5500, -1550, 300], Size: [3000, 100, 600] }
+  - { Name: ArenaWallRight, At: [5500, 1550, 300], Size: [3000, 100, 600] }
+  - { Name: ArenaWallFar, At: [7050, 0, 300], Size: [100, 3200, 600] }
+  - { Name: ArenaWallNearLeft, At: [4000, -1175, 300], Size: [100, 650, 600] }
+  - { Name: ArenaWallNearRight, At: [4000, 1175, 300], Size: [100, 650, 600] }
+
+Shrines:
+  # У входа, за спиной игрока.
+  - { Id: crypt_entrance, At: [120, 0, 80], Yaw: 0 }
+  # Перед ареной, чтобы не проходить зал заново после каждой смерти на боссе.
+  - { Id: crypt_antechamber, At: [3750, 600, 80], Yaw: 180 }
+
+Enemies:
+  - { Character: husk, At: [1200, 300, 100], Yaw: 180 }
+  - { Character: husk, At: [1500, -350, 100], Yaw: 180 }
+  - { Character: crypt_sentinel, At: [2400, 0, 120], Yaw: 180 }
+  - { Character: husk, At: [3000, 300, 100], Yaw: 180 }
+  - { Character: crypt_sentinel, At: [3300, -300, 120], Yaw: 180 }
+
+  - { Character: ashen_knight, At: [6200, 0, 150], Yaw: 180, PersistentId: crypt_ashen_knight }
