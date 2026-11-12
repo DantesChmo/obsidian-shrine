@@ -3,6 +3,7 @@
 #if WITH_DEV_AUTOMATION_TESTS
 
 #include "Core/OSGameMode.h"
+#include "Data/OSDataSubsystem.h"
 #include "GameMapsSettings.h"
 #include "Misc/PackageName.h"
 #include "Modules/ModuleManager.h"
@@ -26,12 +27,17 @@ bool FOSSmokeDefaultGameModeTest::RunTest(const FString& Parameters)
 	return true;
 }
 
-IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOSSmokeSandboxMapTest, "ObsidianShrine.Smoke.SandboxMapExists", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
+IMPLEMENT_SIMPLE_AUTOMATION_TEST(FOSSmokeStartMapTest, "ObsidianShrine.Smoke.StartMapExists", EAutomationTestFlags::EditorContext | EAutomationTestFlags::ProductFilter)
 
-bool FOSSmokeSandboxMapTest::RunTest(const FString& Parameters)
+bool FOSSmokeStartMapTest::RunTest(const FString& Parameters)
 {
+	// StartMap comes from Game/game.yaml; the data compiler copies it into DefaultEngine.ini.
+	const FString StartMap = UOSDataSubsystem::Settings().StartMap;
+	TestTrue(FString::Printf(TEXT("the engine starts on StartMap (%s), got %s"), *StartMap, *UGameMapsSettings::GetGameDefaultMap()),
+		UGameMapsSettings::GetGameDefaultMap().StartsWith(StartMap));
+
 	// Produced by Content/Python/build_content.py; fails if the content pipeline has not been run.
-	TestTrue(TEXT("/Game/Maps/L_Sandbox exists"), FPackageName::DoesPackageExist(TEXT("/Game/Maps/L_Sandbox")));
+	TestTrue(FString::Printf(TEXT("%s exists"), *StartMap), FPackageName::DoesPackageExist(StartMap));
 	return true;
 }
 

@@ -1,11 +1,27 @@
 #include "Data/OSDataSubsystem.h"
 
+#include "Dom/JsonObject.h"
 #include "Engine/Engine.h"
 #include "HAL/FileManager.h"
+#include "HAL/IConsoleManager.h"
+#include "InputCoreTypes.h"
 #include "JsonObjectConverter.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "ObsidianShrine.h"
+#include "Serialization/JsonReader.h"
+#include "Serialization/JsonSerializer.h"
+
+static FAutoConsoleCommand OSReloadDataCommand(
+	TEXT("os.ReloadData"),
+	TEXT("Reloads Content/Data (definitions, settings, key bindings, texts) and applies it to the running game."),
+	FConsoleCommandDelegate::CreateLambda([]()
+	{
+		if (UOSDataSubsystem* Data = UOSDataSubsystem::Get())
+		{
+			Data->Reload();
+		}
+	}));
 
 UOSDataSubsystem* UOSDataSubsystem::Get()
 {
@@ -15,6 +31,69 @@ UOSDataSubsystem* UOSDataSubsystem::Get()
 FString UOSDataSubsystem::GetDataDir()
 {
 	return FPaths::Combine(FPaths::ProjectContentDir(), TEXT("Data"));
+}
+
+const FOSGameDef& UOSDataSubsystem::Settings()
+{
+	static const FOSGameDef Defaults;
+	const UOSDataSubsystem* Data = Get();
+	return Data ? Data->GameDef : Defaults;
+}
+
+const FOSInputDef& UOSDataSubsystem::Bindings()
+{
+	static const FOSInputDef Defaults;
+	const UOSDataSubsystem* Data = Get();
+	return Data ? Data->InputDef : Defaults;
+}
+
+const FOSTextsDef& UOSDataSubsystem::Texts()
+{
+	static const FOSTextsDef Defaults;
+	const UOSDataSubsystem* Data = Get();
+	return Data ? Data->TextsDef : Defaults;
+}
+
+FString UOSDataSubsystem::FormatText(const FString& Pattern, const TMap<FString, FString>& Values)
+{
+	FString Result = Pattern;
+	for (const TPair<FString, FString>& Value : Values)
+	{
+		Result.ReplaceInline(*FString::Printf(TEXT("{%s}"), *Value.Key), *Value.Value, ESearchCase::CaseSensitive);
+	}
+	return Result;
+}
+
+FString UOSDataSubsystem::DescribeKeys(const TArray<FName>& Keys, const FOSTextsDef& InTexts)
+{
+	TArray<FString> Labels;
+	for (const FName Key : Keys)
+	{
+		const FString* Label = InTexts.KeyLabels.Find(Key);
+		Labels.Add(Label ? *Label : Key.ToString());
+	}
+	return FString::Join(Labels, *InTexts.KeySeparator);
+}
+
+void UOSDataSubsystem::ForEachBinding(const FOSInputDef& Input, TFunctionRef<void(const TCHAR*, const TArray<FName>&)> Visit)
+{
+	Visit(TEXT("MoveForward"), Input.MoveForward);
+	Visit(TEXT("MoveBackward"), Input.MoveBackward);
+	Visit(TEXT("MoveLeft"), Input.MoveLeft);
+	Visit(TEXT("MoveRight"), Input.MoveRight);
+	Visit(TEXT("MoveStick"), Input.MoveStick);
+	Visit(TEXT("LookMouse"), Input.LookMouse);
+	Visit(TEXT("LookStick"), Input.LookStick);
+	Visit(TEXT("Light"), Input.Light);
+	Visit(TEXT("Heavy"), Input.Heavy);
+	Visit(TEXT("Guard"), Input.Guard);
+	Visit(TEXT("Dodge"), Input.Dodge);
+	Visit(TEXT("Sprint"), Input.Sprint);
+	Visit(TEXT("DodgeOrSprint"), Input.DodgeOrSprint);
+	Visit(TEXT("LockOn"), Input.LockOn);
+	Visit(TEXT("TargetLeft"), Input.TargetLeft);
+	Visit(TEXT("TargetRight"), Input.TargetRight);
+	Visit(TEXT("Interact"), Input.Interact);
 }
 
 void UOSDataSubsystem::Initialize(FSubsystemCollectionBase& Collection)
@@ -33,8 +112,14 @@ void UOSDataSubsystem::Reload()
 	{
 		UE_LOG(LogObsidian, Error, TEXT("Data: %s"), *Error);
 	}
+	if (!bHasInput)
+	{
+		UE_LOG(LogObsidian, Error, TEXT("Data: no Input section in %s, so no key is bound to anything"), *GetDataDir());
+	}
 	UE_LOG(LogObsidian, Log, TEXT("Data: %d actions, %d weapons, %d characters, %d AI profiles, %d problems"),
 		Actions.Num(), Weapons.Num(), Characters.Num(), AIProfiles.Num(), Errors.Num());
+
+	OnReloaded.Broadcast();
 }
 
 void UOSDataSubsystem::Reset()
@@ -43,6 +128,12 @@ void UOSDataSubsystem::Reset()
 	Weapons.Reset();
 	Characters.Reset();
 	AIProfiles.Reset();
+	GameDef = FOSGameDef();
+	InputDef = FOSInputDef();
+	TextsDef = FOSTextsDef();
+	bHasGame = false;
+	bHasInput = false;
+	bHasTexts = false;
 	LoadErrors.Reset();
 }
 
@@ -78,13 +169,40 @@ int32 UOSDataSubsystem::LoadFromDirectory(const FString& Directory)
 
 bool UOSDataSubsystem::LoadFromJsonString(const FString& Json, const FString& SourceName)
 {
+	TSharedPtr<FJsonObject> Object;
+	const TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(Json);
+	if (!FJsonSerializer::Deserialize(Reader, Object) || !Object.IsValid())
+	{
+		ReportLoadError(FString::Printf(TEXT("%s: invalid JSON: %s"), *SourceName, *Reader->GetErrorMessage()));
+		return false;
+	}
+
 	FOSDataFile File;
 	FText Reason;
-	if (!FJsonObjectConverter::JsonObjectStringToUStruct(Json, &File, 0, 0, false, &Reason))
+	if (!FJsonObjectConverter::JsonObjectToUStruct(Object.ToSharedRef(), &File, 0, 0, false, &Reason))
 	{
 		ReportLoadError(FString::Printf(TEXT("%s: invalid JSON: %s"), *SourceName, *Reason.ToString()));
 		return false;
 	}
+
+	// The struct always has these three, so ask the JSON whether the file really wrote them.
+	auto TakeSection = [this, &Object, &SourceName](const TCHAR* Section, bool& bHas) -> bool
+	{
+		if (!Object->HasField(Section))
+		{
+			return false;
+		}
+		if (bHas)
+		{
+			ReportLoadError(FString::Printf(TEXT("%s: section '%s' is already defined by another file"), *SourceName, Section));
+			return false;
+		}
+		bHas = true;
+		return true;
+	};
+	if (TakeSection(TEXT("Game"), bHasGame)) { GameDef = File.Game; }
+	if (TakeSection(TEXT("Input"), bHasInput)) { InputDef = File.Input; }
+	if (TakeSection(TEXT("Texts"), bHasTexts)) { TextsDef = File.Texts; }
 
 	for (const FOSActionDef& Def : File.Actions) { AddAction(Def, SourceName); }
 	for (const FOSWeaponDef& Def : File.Weapons) { AddWeapon(Def, SourceName); }
@@ -243,6 +361,22 @@ TArray<FString> UOSDataSubsystem::Validate() const
 			PreviousThreshold = Phase.HealthBelow;
 		}
 	}
+
+	if (bHasGame && !Characters.Contains(GameDef.PlayerCharacter))
+	{
+		Errors.Add(FString::Printf(TEXT("game settings: PlayerCharacter '%s' is not a known character"), *GameDef.PlayerCharacter.ToString()));
+	}
+
+	ForEachBinding(InputDef, [&Errors](const TCHAR* Action, const TArray<FName>& Keys)
+	{
+		for (const FName Key : Keys)
+		{
+			if (!FKey(Key).IsValid())
+			{
+				Errors.Add(FString::Printf(TEXT("input: %s is bound to unknown key '%s'"), Action, *Key.ToString()));
+			}
+		}
+	});
 
 	return Errors;
 }

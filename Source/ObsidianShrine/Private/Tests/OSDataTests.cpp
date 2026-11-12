@@ -17,8 +17,14 @@ bool FOSDataShippedTest::RunTest(const FString& Parameters)
 		AddError(Error);
 	}
 
-	const FOSCharacterDef* Player = Data->FindCharacter(TEXT("player"));
-	if (!TestNotNull(TEXT("character 'player'"), Player))
+	TestTrue(TEXT("game settings are shipped (Game/game.yaml)"), Data->HasGame());
+	TestTrue(TEXT("key bindings are shipped (Game/input.yaml)"), Data->HasInput());
+	TestTrue(TEXT("texts are shipped (Game/texts.yaml)"), Data->HasTexts());
+	TestTrue(TEXT("something is bound to Interact"), Data->GetInput().Interact.Num() > 0);
+	TestTrue(TEXT("something moves the player"), Data->GetInput().MoveForward.Num() + Data->GetInput().MoveStick.Num() > 0);
+
+	const FOSCharacterDef* Player = Data->FindCharacter(Data->GetGame().PlayerCharacter);
+	if (!TestNotNull(TEXT("the player's character definition"), Player))
 	{
 		return false;
 	}
