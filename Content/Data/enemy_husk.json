@@ -13,6 +13,7 @@
       "AIProfile": "husk_ai",
       "CurrencyReward": 40,
       "PlaceholderColor": "#B0503A",
+      "Cosmetics": "flesh",
       "Actions": {
         "Stagger": "react_stagger",
         "Parried": "react_parried",

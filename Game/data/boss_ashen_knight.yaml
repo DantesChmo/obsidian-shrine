@@ -18,6 +18,7 @@ Characters:
     Boss: true
     Scale: 1.25
     PlaceholderColor: "#D9772B"
+    Cosmetics: boss
     Actions:
       Stagger: react_stagger_heavy
       Parried: react_parried

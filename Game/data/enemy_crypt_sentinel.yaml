@@ -15,6 +15,7 @@ Characters:
     CurrencyReward: 120
     Scale: 1.15
     PlaceholderColor: "#8A8F99"
+    Cosmetics: flesh
     Actions:
       Stagger: react_stagger_heavy
       Parried: react_parried

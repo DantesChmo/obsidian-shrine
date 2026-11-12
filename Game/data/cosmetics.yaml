@@ -1,0 +1,19 @@
+# Косметика: что звучит и показывается на события персонажа.
+# Пока ассеты не подключены, работают только тряска камеры и хит-стоп; звуки и эффекты добавляются
+# полями Sound и Effect с именами из Game/assets.yaml.
+# Справочник всех полей: Docs/REFERENCE.md
+
+Cosmetics:
+  # Люди и нежить в лёгкой броне: короткий хит-стоп, заметный толчок на идеальном блоке.
+  - Id: flesh
+    Hit: { Shake: 5, ShakeDuration: 0.15, HitStop: 0.06 }
+    Guard: { Shake: 3, ShakeDuration: 0.12, HitStop: 0.04 }
+    PerfectGuard: { Shake: 7, ShakeDuration: 0.2, HitStop: 0.1 }
+
+  # Боссы: удары по ним тяжелее, переход в фазу встряхивает камеру.
+  - Id: boss
+    Hit: { Shake: 7, ShakeDuration: 0.18, HitStop: 0.08 }
+    Guard: { Shake: 4, ShakeDuration: 0.15, HitStop: 0.05 }
+    PerfectGuard: { Shake: 9, ShakeDuration: 0.25, HitStop: 0.12 }
+    Death: { Shake: 12, ShakeDuration: 0.8 }
+    PhaseChange: { Shake: 14, ShakeDuration: 0.6 }

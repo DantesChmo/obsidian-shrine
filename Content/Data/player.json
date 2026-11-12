@@ -14,6 +14,7 @@
       "SprintStaminaPerSecond": 12,
       "Weapon": "pilgrim_sword",
       "PlaceholderColor": "#4F8FE0",
+      "Cosmetics": "flesh",
       "Actions": {
         "Dodge": "player_dodge",
         "Stagger": "react_stagger",
