@@ -1,0 +1,8 @@
+# Наборы освещения. Уровень выбирает один по имени: `Lighting: outdoor_day`.
+# Справочник всех полей: Docs/REFERENCE.md
+
+Presets:
+  - Id: outdoor_day
+    SunPitch: -40
+    SunYaw: 30
+    Fog: true

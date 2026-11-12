@@ -1,4 +1,8 @@
-"""L_Sandbox: greybox test arena with one of everything: shrine, regular enemies, boss."""
+"""L_Sandbox, hand-scripted. SUPERSEDED by Game/levels/sandbox.yaml + level_builder.py and no longer run.
+
+Kept as a known-good fallback until level_builder has built a level in the editor once (see Docs/UNVERIFIED.md):
+Tools/tests/test_levels.py proves both produce the same placement calls. Delete it after that first run.
+"""
 
 import unreal
 

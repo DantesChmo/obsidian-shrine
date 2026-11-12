@@ -19,6 +19,12 @@ SECTIONS = [
      "Фаза начинается, когда здоровье падает до порога. Фазы идут по убыванию порога."),
 ]
 
+
+def all_sections():
+    from . import levels
+    return SECTIONS + levels.REFERENCE_SECTIONS
+
+
 SLOT_NOTES = [
     ("Light", "лёгкая атака", "оружие"),
     ("Heavy", "тяжёлая атака", "оружие"),
@@ -32,7 +38,7 @@ SLOT_NOTES = [
 
 
 def documented_structs():
-    return [section[1] for section in SECTIONS]
+    return [section[1] for section in all_sections()]
 
 
 def _format_default(field):
@@ -56,7 +62,7 @@ def _format_type(field, schema):
         if t.kind == "enum":
             return " / ".join("`{}`".format(value) for value in schema.enums[t.ref])
         if t.kind == "struct":
-            return "см. «{}»".format(next((s[0] for s in SECTIONS if s[1] == t.ref), t.ref))
+            return "см. «{}»".format(next((s[0] for s in all_sections() if s[1] == t.ref), t.ref))
         if t.kind == "array":
             return "список: {}".format(one(t.item))
         if t.kind == "map":
@@ -92,7 +98,7 @@ def render(schema, sections=None):
         "",
     ]
 
-    for heading, struct_name, where, intro in (sections or SECTIONS):
+    for heading, struct_name, where, intro in (sections or all_sections()):
         struct = schema.structs[struct_name]
         lines += ["## {}".format(heading), "", "Где пишется: {}.".format(where), "", intro, "",
                   "| Поле | Тип | По умолчанию | Диапазон | Что значит |", "|---|---|---|---|---|"]

@@ -14,10 +14,10 @@ import traceback
 
 import unreal
 
-from os_content import sandbox_level
+from os_content import level_builder
 
 BUILDERS = [
-    ("sandbox_level", sandbox_level.build),
+    ("levels", level_builder.build_all),
 ]
 
 

@@ -1,0 +1,32 @@
+# Песочница: серая арена, где есть всё по одному — святилище, обычные враги, босс.
+# Справочник всех полей: Docs/REFERENCE.md
+
+Map: /Game/Maps/L_Sandbox
+Lighting: outdoor_day
+
+PlayerStart: { At: [0, -1500, 100], Yaw: 90 }
+
+Blocks:
+  # Пол 80 × 80 метров.
+  - { Name: Floor, At: [0, 0, -50], Size: [8000, 8000, 100] }
+
+  # Колонны: проверить столкновение камеры и потерю цели за препятствием.
+  - { Name: Pillar_0, At: [1200, 800, 300], Size: [200, 200, 600] }
+  - { Name: Pillar_1, At: [-1200, 800, 300], Size: [200, 200, 600] }
+  - { Name: Pillar_2, At: [1200, -800, 300], Size: [200, 200, 600] }
+  - { Name: Pillar_3, At: [-1200, -800, 300], Size: [200, 200, 600] }
+
+  # Пандус и уступ: проверить склоны и падение.
+  - { Name: Ramp, At: [0, 2000, 150], Size: [400, 800, 50], Rotation: [0, 0, 20] }
+  - { Name: Ledge, At: [0, 2800, 250], Size: [600, 400, 500] }
+
+Shrines:
+  # Сразу за спиной игрока, лицом к арене.
+  - { Id: sandbox_start, Name: Shrine_Start, At: [0, -1900, 80], Yaw: 90 }
+
+Enemies:
+  - { Character: husk, Name: Enemy_Husk_0, At: [-500, 300, 100], Yaw: -90 }
+  - { Character: husk, Name: Enemy_Husk_1, At: [600, 900, 100], Yaw: -90 }
+
+  # Босс в дальнем углу, в стороне от боя с обычными врагами.
+  - { Character: shrine_warden, Name: Boss_ShrineWarden, At: [-2600, -2600, 200], Yaw: 45, PersistentId: sandbox_shrine_warden }

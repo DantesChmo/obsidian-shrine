@@ -1,0 +1,221 @@
+{
+  "_generated": "from Game/levels/sandbox.yaml by Tools/build_data.py - edit the YAML, not this file",
+  "Map": "/Game/Maps/L_Sandbox",
+  "Lighting": {
+    "SunPitch": -40,
+    "SunYaw": 30,
+    "Fog": true
+  },
+  "Spawns": [
+    {
+      "Kind": "Block",
+      "Label": "Floor",
+      "Location": [
+        0,
+        0,
+        -50
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        80.0,
+        80.0,
+        1.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "Pillar_0",
+      "Location": [
+        1200,
+        800,
+        300
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        2.0,
+        2.0,
+        6.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "Pillar_1",
+      "Location": [
+        -1200,
+        800,
+        300
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        2.0,
+        2.0,
+        6.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "Pillar_2",
+      "Location": [
+        1200,
+        -800,
+        300
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        2.0,
+        2.0,
+        6.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "Pillar_3",
+      "Location": [
+        -1200,
+        -800,
+        300
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        2.0,
+        2.0,
+        6.0
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "Ramp",
+      "Location": [
+        0,
+        2000,
+        150
+      ],
+      "Rotation": [
+        0,
+        0,
+        20
+      ],
+      "Scale": [
+        4.0,
+        8.0,
+        0.5
+      ]
+    },
+    {
+      "Kind": "Block",
+      "Label": "Ledge",
+      "Location": [
+        0,
+        2800,
+        250
+      ],
+      "Rotation": [
+        0,
+        0,
+        0
+      ],
+      "Scale": [
+        6.0,
+        4.0,
+        5.0
+      ]
+    },
+    {
+      "Kind": "PlayerStart",
+      "Label": "PlayerStart",
+      "Location": [
+        0,
+        -1500,
+        100
+      ],
+      "Rotation": [
+        0,
+        90,
+        0
+      ]
+    },
+    {
+      "Kind": "Shrine",
+      "Label": "Shrine_Start",
+      "Id": "sandbox_start",
+      "Location": [
+        0,
+        -1900,
+        80
+      ],
+      "Rotation": [
+        0,
+        90,
+        0
+      ]
+    },
+    {
+      "Kind": "Enemy",
+      "Label": "Enemy_Husk_0",
+      "Character": "husk",
+      "PersistentId": "",
+      "Location": [
+        -500,
+        300,
+        100
+      ],
+      "Rotation": [
+        0,
+        -90,
+        0
+      ]
+    },
+    {
+      "Kind": "Enemy",
+      "Label": "Enemy_Husk_1",
+      "Character": "husk",
+      "PersistentId": "",
+      "Location": [
+        600,
+        900,
+        100
+      ],
+      "Rotation": [
+        0,
+        -90,
+        0
+      ]
+    },
+    {
+      "Kind": "Enemy",
+      "Label": "Boss_ShrineWarden",
+      "Character": "shrine_warden",
+      "PersistentId": "sandbox_shrine_warden",
+      "Location": [
+        -2600,
+        -2600,
+        200
+      ],
+      "Rotation": [
+        0,
+        45,
+        0
+      ]
+    }
+  ]
+}

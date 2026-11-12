@@ -1,6 +1,7 @@
 """Turns the YAML sources under Game/ into the JSON files the engine and the level builder read.
 
     Game/data/**/*.yaml      -> Content/Data/**/*.json        gameplay definitions (engine, at runtime)
+    Game/levels/*.yaml       -> Content/LevelData/*.json      resolved spawn lists (level builder, in the editor)
     Game/schema/fields.yaml                                   descriptions and ranges of every field
                              -> Docs/REFERENCE.md             generated field reference
 
@@ -10,7 +11,7 @@ Generated files are committed, so the game runs from a fresh checkout. `check` f
 import json
 import os
 
-from . import reference, rules, schema as schema_module
+from . import levels, reference, rules, schema as schema_module
 from .shape import ShapeChecker
 from .source import LMap, LSeq, Problem, SourceError, load_file
 
@@ -19,7 +20,9 @@ GENERATED_KEY = "_generated"
 HEADER_PATH = "Source/ObsidianShrine/Public/Data/OSDataTypes.h"
 DATA_SOURCES = "Game/data"
 FIELDS_PATH = "Game/schema/fields.yaml"
+LEVEL_SOURCES = "Game/levels"
 DATA_OUTPUT = "Content/Data"
+LEVEL_OUTPUT = "Content/LevelData"
 REFERENCE_PATH = "Docs/REFERENCE.md"
 
 
@@ -54,9 +57,10 @@ def _to_json(payload, source):
 
 
 def load_schema(root, problems):
-    """C++ structs with descriptions and ranges applied from fields.yaml."""
+    """C++ structs plus the level manifest shape, with descriptions and ranges applied from fields.yaml."""
     with open(os.path.join(root, HEADER_PATH), "r", encoding="utf-8") as handle:
         schema = schema_module.parse_cpp_header(handle.read())
+    levels.add_to_schema(schema)
 
     for field in schema.structs["FOSActionDef"].fields.values():
         field.required = field.name in ("Id", "Duration")
@@ -143,6 +147,10 @@ def run(root):
     build.schema = load_schema(root, build.problems)
     _build_data(root, build)
 
+    for path, payload in levels.build(root, _yaml_files(root, LEVEL_SOURCES), build).items():
+        name = os.path.splitext(os.path.basename(path))[0]
+        build.outputs["{}/{}.json".format(LEVEL_OUTPUT, name)] = _to_json(payload, path)
+
     build.outputs[REFERENCE_PATH] = reference.render(build.schema)
     build.problems.sort(key=lambda problem: (problem.file, problem.line))
     return build
@@ -159,7 +167,7 @@ def _is_generated(path):
 def _orphans(root, build):
     """Generated JSON on disk whose YAML source is gone."""
     found = []
-    for directory in (DATA_OUTPUT,):
+    for directory in (DATA_OUTPUT, LEVEL_OUTPUT):
         for folder, _, names in os.walk(os.path.join(root, directory)):
             for name in names:
                 relative = os.path.relpath(os.path.join(folder, name), root).replace(os.sep, "/")
