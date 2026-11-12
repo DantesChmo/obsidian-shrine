@@ -5,7 +5,14 @@
 
 #include "OSGameMode.generated.h"
 
-/** Default game mode for the tech demo. Gameplay rules (checkpoints, death loop) land here in M4. */
+class AOSCheckpoint;
+class AOSEnemyCharacter;
+class AOSPlayerCharacter;
+
+/**
+ * Rules of the death loop: rest at a shrine, die and drop currency, respawn at the last shrine with the
+ * enemies reset, recover the drop or lose it on the next death. Progress lives in UOSProgressSubsystem.
+ */
 UCLASS()
 class OBSIDIANSHRINE_API AOSGameMode : public AGameModeBase
 {
@@ -14,5 +21,25 @@ class OBSIDIANSHRINE_API AOSGameMode : public AGameModeBase
 public:
 	AOSGameMode();
 
+	/** Seconds between the player's death and the respawn. */
+	float RespawnDelay = 3.5f;
+
+	void HandlePlayerDeath(AOSPlayerCharacter* Player);
+	void HandleEnemyDeath(AOSEnemyCharacter* Enemy);
+	void RestAtCheckpoint(AOSCheckpoint* Checkpoint, AOSPlayerCharacter* Player);
+	void RecoverDroppedCurrency();
+
 	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
+	virtual void StartPlay() override;
+	virtual void RestartPlayer(AController* NewPlayer) override;
+
+private:
+	FTimerHandle RespawnTimer;
+
+	void RespawnPlayer();
+	void ResetEnemies();
+	/** Makes the world match the save: one pickup if currency was dropped on this map, none otherwise. */
+	void RefreshDroppedPickup();
+	AOSCheckpoint* FindCheckpoint(FName CheckpointId) const;
+	void ShowMessage(const FString& Message, float Duration = 3.f) const;
 };
