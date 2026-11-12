@@ -15,7 +15,7 @@
 powershell -ExecutionPolicy Bypass -File .\Scripts\Verify.ps1
 ```
 
-Скрипт собирает проект, генерирует контент (уровень `L_Sandbox`) и прогоняет автотесты. Итог —
+Скрипт проверяет манифесты, собирает проект, генерирует уровни и прогоняет автотесты. Итог —
 `Saved\Reports\summary.md`.
 
 Проще всего попросить Claude Code на Windows: «спуллить, прогнать Verify.ps1 и починить, что сломалось».
@@ -26,7 +26,10 @@ powershell -ExecutionPolicy Bypass -File .\Scripts\Verify.ps1
 |---|---|
 | `Source/ObsidianShrine` | C++ код игры |
 | `Source/ObsidianShrine/Private/Tests` | Автотесты |
-| `Content/Data/*.json` | Все игровые данные: действия, оружие, персонажи, ИИ |
+| `Game` | Манифесты игры в YAML: действия, оружие, персонажи, ИИ, уровни |
+| `Tools` | Компилятор манифестов и его тесты (обычный Python, Unreal не нужен) |
+| `Content/Data`, `Content/LevelData` | Данные, собранные из манифестов; руками не правятся |
+| `Docs` | Справочник полей, роадмап, список непроверенного |
 | `Content/Python` | Пайплайн контента: уровни и ассеты создаются скриптами |
 | `Scripts/*.ps1` | Сборка, контент, тесты для Windows |
 | `Config` | Настройки движка и проекта |
@@ -52,21 +55,34 @@ powershell -ExecutionPolicy Bypass -File .\Scripts\Verify.ps1
 
 ## Как добавлять контент
 
-Код менять не нужно — только JSON в `Content/Data` (любой файл может содержать любые из массивов `Actions`,
-`Weapons`, `Characters`, `AIProfiles`; удобно держать один файл на врага) и скрипт уровня. Все поля с комментариями —
-в `Source/ObsidianShrine/Public/Data/OSDataTypes.h`.
+Игра описывается YAML-файлами в папке `Game`. Код для этого менять не нужно.
 
-- **Действие** (`Actions`) — таймлайн в секундах: `Duration`, `StaminaCost`, окна `Windows`
-  (`Hit`, `Invulnerable`, `Guard`, `PerfectGuard`, `HyperArmor`, `Cancel`), рывок `MoveDistance/MoveStart/MoveEnd`,
-  продолжение комбо `ComboNext`, автоцепочка `AutoNext`, анимация `Animation` (растягивается под `Duration`).
-- **Оружие** (`Weapons`) — урон, длина и радиус зоны удара, параметры блока, слоты `Light/Heavy/Guard` → действия.
-- **Персонаж** (`Characters`) — статы, оружие, слоты реакций (`Dodge`, `Stagger`, `GuardBreak`, `Parried`, `Death`),
-  `AIProfile`, награда, `bBoss`, меш и анимации (`Mesh`, `AnimClass`, `IdleAnimation`, `MoveAnimation`).
-- **ИИ** (`AIProfiles`) — радиусы, набор атак `Moves` с дистанцией, весом, перезарядкой и фазой; фазы босса `Phases`
-  по порогу здоровья с действием на входе.
-- **Расстановка на уровне** — в скрипте уровня (`Content/Python/os_content/*_level.py`):
-  `level_utils.spawn_enemy("husk", ...)`, `spawn_enemy(..., persistent_id="...")` для босса,
-  `level_utils.spawn_checkpoint("id", ...)`.
+| Что добавить | Где |
+|---|---|
+| Атаку, уклонение, реакцию | `Game/data/*.yaml`, секция `Actions` |
+| Оружие | `Game/data/*.yaml`, секция `Weapons` |
+| Врага, босса | `Game/data/*.yaml`, секции `Characters` и `AIProfiles` |
+| Уровень | `Game/levels/<имя>.yaml` |
+| Набор освещения | `Game/lighting.yaml` |
 
-Ошибки в данных (опечатка в id, окно за пределами действия и т. п.) ловит тест
-`ObsidianShrine.Data.ShippedDataIsValid` и лог при старте.
+Все поля с типами, значениями по умолчанию и пояснениями — в [Docs/REFERENCE.md](Docs/REFERENCE.md).
+Готовые примеры: враг `Game/data/enemy_husk.yaml`, босс с фазами `Game/data/boss_ashen_knight.yaml`,
+уровень `Game/levels/ashen_crypt.yaml`.
+
+После правки YAML:
+
+```bash
+python3 Tools/build_data.py
+```
+
+Скрипт проверяет все файлы и пересобирает данные для игры (`Content/Data`, `Content/LevelData`) и справочник.
+Если что-то не так — опечатка в имени, ссылка на несуществующую атаку, окно удара за пределами действия,
+цвет без кавычек — он ничего не пишет и показывает файл и строку:
+
+```
+Game/data/enemy_husk.yaml:33: AI profile 'husk_ai' uses action 'husk_slahs', which is not defined anywhere
+```
+
+Файлы в `Content/Data` и `Content/LevelData` руками не правятся: они создаются из YAML и коммитятся вместе с ним.
+
+План развития — в [Docs/ROADMAP.md](Docs/ROADMAP.md).

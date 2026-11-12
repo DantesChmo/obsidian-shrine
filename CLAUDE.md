@@ -15,8 +15,15 @@ Souls-like action RPG tech demo. Unreal Engine 5 (C++), target platform Win64 on
 - No Blueprints and no hand-edited binary assets. Gameplay is C++; every asset and level is produced by Python scripts in
   `Content/Python` (entry: `build_content.py`), so `Content/` can be rebuilt from text. The only accepted exception is
   Animation Blueprints if a C++/script-only route proves impossible — decide explicitly, do not drift into it.
-- Data (weapons, stats, enemy movesets) lives in `Content/Data/*.json`, not hard-coded. New enemies, weapons and
-  attacks are added there without touching C++; `ObsidianShrine.Data.ShippedDataIsValid` checks references.
+- Game content is authored as YAML manifests in `Game/` (definitions in `Game/data`, levels in `Game/levels`) and
+  compiled by `python3 Tools/build_data.py` into `Content/Data` and `Content/LevelData`. Never edit the generated
+  JSON; commit it together with the YAML. Run the compiler and `python3 -B -m unittest discover -s Tools/tests`
+  after every manifest or tool change: both run on the Mac.
+- A manifest field exists only together with the code that executes it. New enemies, weapons, attacks and levels
+  must not need C++ or Python changes; a new mechanic is coded once and then exposed as a field.
+- Field descriptions and ranges live in `Game/schema/fields.yaml` (Russian, user-facing); `Docs/REFERENCE.md` is
+  generated from them. Field names, types and defaults come from `Public/Data/OSDataTypes.h`.
+- Anything written but not yet run on Windows is listed in `Docs/UNVERIFIED.md`; keep it current.
 - Every gameplay change ships with an automation test under `Source/ObsidianShrine/Private/Tests`, test names
   `ObsidianShrine.<Area>.<Name>`.
 - Assets from Fab/Marketplace are imported on the Windows machine into `Content/ThirdParty/` and are not committed.
@@ -26,7 +33,10 @@ Souls-like action RPG tech demo. Unreal Engine 5 (C++), target platform Win64 on
 
 ## Architecture
 
-- No GAS. `UOSDataSubsystem` (engine subsystem) loads definitions from JSON; structs are in `Public/Data/OSDataTypes.h`.
+- No GAS. `UOSDataSubsystem` (engine subsystem) loads the generated JSON; structs are in `Public/Data/OSDataTypes.h`.
+- Data tools: `Tools/osdata` (`source` YAML with line numbers, `schema` from the C++ header, `shape` type checks,
+  `rules` cross-references, `levels` level manifests, `reference` docs). Vendored PyYAML in `Tools/vendor`;
+  keep the tools on Python 3.11 syntax (the engine's bundled Python runs them on Windows).
 - An action is a timeline of windows (Hit, Invulnerable, Guard, PerfectGuard, HyperArmor, Cancel) run by
   `UOSActionComponent`; gameplay timing comes from data, never from animation notifies. Animations are optional
   and are stretched to the action's duration.
@@ -36,7 +46,8 @@ Souls-like action RPG tech demo. Unreal Engine 5 (C++), target platform Win64 on
   enemies and bosses alike. Without meshes characters render as placeholders.
 - Input actions are built in code in `AOSPlayerController`; the HUD is canvas-drawn (`AOSHUD`). No input or UI assets.
 - Death loop and save: `AOSGameMode` + `UOSProgressSubsystem` (`FOSProgressState`).
-- Levels place `AOSEnemySpawner` / `AOSCheckpoint` via `level_utils.spawn_enemy` / `spawn_checkpoint`.
+- Levels are built by `os_content/level_builder.py` from `Content/LevelData/*.json`; it only places what the
+  resolved manifest lists. Roadmap: `Docs/ROADMAP.md`.
 
 ## Git
 
@@ -47,7 +58,8 @@ Souls-like action RPG tech demo. Unreal Engine 5 (C++), target platform Win64 on
 ## Commands (Windows)
 
 ```powershell
-.\Scripts\Verify.ps1          # build + content + tests, writes Saved\Reports\summary.md
+.\Scripts\Verify.ps1          # data + build + content + tests, writes Saved\Reports\summary.md
+.\Scripts\BuildData.ps1       # validate manifests, check generated JSON, run tool tests (-Write to regenerate)
 .\Scripts\Build.ps1           # compile ObsidianShrineEditor Development
 .\Scripts\BuildContent.ps1    # run the Python content pipeline
 .\Scripts\RunTests.ps1        # automation tests, filter "ObsidianShrine"
